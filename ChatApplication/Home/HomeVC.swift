@@ -42,9 +42,9 @@ class HomeVC: UITabBarController {
         let navChatListVC = UINavigationController(rootViewController: chatListVC)
         navChatListVC.tabBarItem = UITabBarItem(title: "Chats", image: UIImage(systemName: "message"), tag: 1)
         
-        let callListVC = CallListVC()
-        let navCallListVC = UINavigationController(rootViewController: callListVC)
-        navCallListVC.tabBarItem = UITabBarItem(title: "Anrufe", image: UIImage(systemName: "phone"), tag: 2)
+//        let callListVC = CallListVC()
+//        let navCallListVC = UINavigationController(rootViewController: callListVC)
+//        navCallListVC.tabBarItem = UITabBarItem(title: "Anrufe", image: UIImage(systemName: "phone"), tag: 2)
         
         let friendListVC = FriendListViewController()
         let navFriendListVC = UINavigationController(rootViewController: friendListVC)
@@ -55,7 +55,7 @@ class HomeVC: UITabBarController {
         let navProfileViewHostingController = UINavigationController(rootViewController: profileViewHostingController)
         navProfileViewHostingController.tabBarItem = UITabBarItem(title: "Profil", image: UIImage(systemName: "person.circle"), tag: 4)
         
-        viewControllers = [navUserSearchVC, navChatListVC, navCallListVC ,navFriendListVC, navProfileViewHostingController]
+        viewControllers = [navUserSearchVC, navChatListVC, navFriendListVC, navProfileViewHostingController]
     }
     
     func fetchAndSetFriendRequests() {

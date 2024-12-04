@@ -11,15 +11,13 @@ class VideoCallService: NSObject {
     var remoteVideoTrack: RTCVideoTrack?
     private var videoCapturer: RTCCameraVideoCapturer?
     private var callID: String?
-    private var currentUserID: String?
     private(set) var isMuted = false
     
     private override init() {
         super.init()
     }
     
-    func startCall(currentUserID: String, remoteUserID: String, callID: String, completion: @escaping (Bool) -> Void) {
-        self.currentUserID = currentUserID
+    func startCall(remoteUserID: String, callID: String, completion: @escaping (Bool) -> Void) {
         self.callID = callID
         
         // WebRTC-Initialisierung und Setup
@@ -148,7 +146,7 @@ class VideoCallService: NSObject {
             let callData: [String: Any] = [
                 "type": "offer",
                 "sdp": offer.sdp,
-                "senderID": self.currentUserID ?? "",
+                "senderID": Auth.auth().currentUser?.uid ?? "",
                 "receiverID": remoteUserID,
                 "status": "incoming"
             ]
@@ -176,7 +174,7 @@ class VideoCallService: NSObject {
             let callData: [String: Any] = [
                 "type": "answer",
                 "sdp": answer.sdp,
-                "senderID": self.currentUserID ?? "",
+                "senderID": Auth.auth().currentUser?.uid ?? "",
                 "receiverID": remoteUserID
             ]
             db.collection("calls").document(callID).setData(callData) { error in
@@ -214,7 +212,6 @@ class VideoCallService: NSObject {
         remoteVideoTrack = nil
         videoCapturer = nil
         callID = nil
-        currentUserID = nil
     }
 }
 

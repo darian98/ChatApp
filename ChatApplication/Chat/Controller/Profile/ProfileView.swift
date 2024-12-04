@@ -54,13 +54,26 @@ struct ProfileView: View {
             }
         )
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .topBarLeading) {
                 pencilButton
+            }
+            ToolbarItem(placement: .topBarTrailing) {
+                logoutButton
             }
         }
     }
 }
 extension ProfileView {
+    private var logoutButton: some View {
+        Button(action: {
+            withAnimation(.spring()) {
+                AuthService.shared.logoutUser()
+            }
+        }, label: {
+            Image(systemName: "power")
+        })
+    }
+    
     private var profileImageButton: some View {
         Button(action: {
             viewModel.showImagePicker.toggle()
@@ -89,7 +102,9 @@ extension ProfileView {
         Button("Speichern") {
             withAnimation(.spring()) {
                 viewModel.saveProfileDataWithCompressedImage(currentUserID: currentUser.uid)
-                editBio.toggle()
+                if editBio {
+                    editBio.toggle()
+                }
             }
         }
         .buttonStyle(.borderedProminent)

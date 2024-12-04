@@ -11,7 +11,6 @@
     import FirebaseAuth
 
     class UserSearchViewController: UIViewController {
-        
         private let searchBar = UISearchBar()
         private let tableView = UITableView()
         private var users: [UserModel] = []
@@ -33,9 +32,9 @@
             view.backgroundColor = .white
             setupSearchBar()
             setupTableView()
-            setupLogoutButton()
             fetchAllUsers()
             addTapGestureRecognizerToView(action: #selector(dismissKeyboard))
+            navigationItem.title = "Alle Nutzer"
         }
         
         @objc private func dismissKeyboard() {
@@ -51,14 +50,10 @@
         private func setupTableView() {
             tableView.dataSource = self
             tableView.delegate = self
-            tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+            //tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+            tableView.register(UserSearchListCell.self, forCellReuseIdentifier: "UserSearchListCell")
             tableView.frame = view.bounds
             view.addSubview(tableView)
-        }
-        
-        func setupLogoutButton() {
-            let powerImage = UIImage(systemName: "power")
-            navigationItem.rightBarButtonItem = UIBarButtonItem(image: powerImage, style: .done, target: self, action: #selector(logoutTapped))
         }
         
         private func fetchAllUsers() {
@@ -76,10 +71,6 @@
             }
         }
         
-        @objc func logoutTapped() {
-            AuthService.shared.logoutUser()
-        }
-        
         // Funktion zum Starten eines Chats
         private func startChat(with user: UserModel) {
             ChatService.shared.startChat2(currentUser: currentUser, with: [user], viewController: self)
@@ -92,8 +83,9 @@
                 filteredUsers = []
             } else {
                 filteredUsers = users.filter { user in
-                    user.displayName.lowercased().contains(searchText.lowercased()) ||
-                    user.email.lowercased().contains(searchText.lowercased())
+                    user.uid != currentUser.uid &&
+                    (user.displayName.lowercased().contains(searchText.lowercased()) ||
+                    user.email.lowercased().contains(searchText.lowercased()))
                 }
             }
             tableView.reloadData()
@@ -103,14 +95,21 @@
 extension UserSearchViewController:  UITableViewDataSource, UITableViewDelegate {
     // UITableViewDataSource - Tabellenansicht für die Benutzerliste
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        print("FilteredUsersCount: \(filteredUsers.count)")
         return filteredUsers.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+        guard let cell = tableView.dequeueReusableCell(withIdentifier: "UserSearchListCell", for: indexPath) as? UserSearchListCell else { return UITableViewCell() }
+        //let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
         let user = filteredUsers[indexPath.row]
-        cell.textLabel?.text = user.displayName + " (" + user.email + ")"
+        cell.configure(userName: user.displayName, email: user.email, base64ImageString: user.profileImage)
+        //cell.textLabel?.text = user.displayName + " (" + user.email + ")"
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        return 86  // Beispielhöhe, anpassbar
     }
     
     // UITableViewDelegate - Aktion bei Auswahl eines Benutzers
