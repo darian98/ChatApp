@@ -74,7 +74,7 @@ extension ProfileView {
         })
     }
     
-    private var profileImageButton: some View {
+    private var profileImageButton: some View { 
         Button(action: {
             viewModel.showImagePicker.toggle()
         }) {
