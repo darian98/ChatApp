@@ -86,9 +86,10 @@ extension UIViewController {
         }
         let cancelButton        = UIAlertAction(title: "Abbrechen", style: .cancel, handler: nil)
         
-        alertController.addAction(deleteFriendAction)
         alertController.addAction(sendMessageAction)
+        alertController.addAction(deleteFriendAction)
         alertController.addAction(cancelButton)
+        
         self.present(alertController, animated: true, completion: nil)
         
     }
