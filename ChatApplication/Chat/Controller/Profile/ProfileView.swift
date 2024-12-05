@@ -25,9 +25,7 @@ struct ProfileView: View {
                         .frame(alignment: .top)
                     
                     Spacer()
-                    
                 }
-                
                 
                 VStack(alignment: .leading) {
                     userInfoText

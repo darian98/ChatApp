@@ -95,7 +95,7 @@ extension UIViewController {
     }
     
     func showDeleteMessagesTimerAlert(chatID: String) {
-        let alertController = UIAlertController(title: "Selbstzerstörende Nachrichten", message: "Gib die Anzahl der Sekunden ein, nach denen Nachrichten gelöscht werden sollen.", preferredStyle: .alert)
+        let alertController = UIAlertController(title: "Selbstzerstörende Nachrichten", message: "Nach wie vielen Sekunden sollen die Nachrichten zerstört werden?", preferredStyle: .alert)
             // Füge ein Textfeld für die Eingabe hinzu
             alertController.addTextField { textField in
                 textField.placeholder = "Sekunden eingeben"
@@ -117,9 +117,15 @@ extension UIViewController {
                 ChatService.shared.updateDeleteMessagesAfterSecondsForChat(chatID: chatID, seconds: seconds)
                 
             }
+            
+        let deleteTimerAction = UIAlertAction(title: "Timer löschen", style: .destructive) { _ in
+            ChatService.shared.updateDeleteMessagesAfterSecondsForChat(chatID: chatID, seconds: 0)
+        }
+        
             // Füge die Aktionen hinzu
-            alertController.addAction(cancelAction)
             alertController.addAction(okAction)
+            alertController.addAction(deleteTimerAction)
+            alertController.addAction(cancelAction)
             // Zeige den AlertController an
             self.present(alertController, animated: true, completion: nil)
     }

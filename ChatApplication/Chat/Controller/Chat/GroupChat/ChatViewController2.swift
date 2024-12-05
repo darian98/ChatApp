@@ -484,13 +484,14 @@
             let cell = tableView.dequeueReusableCell(withIdentifier: "messageCell", for: indexPath)
             cell.isUserInteractionEnabled = true
             let message = messages[indexPath.row]
+            let readIndicator = message.receiverReadMessage ? "✓✓" : "✓"
             
             if messageIsFromCurrentUser(message: message) {
                 if message.isAudio {
-                    cell.textLabel?.text = "Du: Sprachnotiz"
+                    cell.textLabel?.text = "Du: Sprachnotiz \(readIndicator)"
                     //vAudioService.shared.playAudio(from: message.message)
                 } else {
-                    cell.textLabel?.text = "Du: \(message.message)"
+                    cell.textLabel?.text = "Du: \(message.message) \(readIndicator)"
                 }
                 cell.textLabel?.textAlignment = .right
                 cell.backgroundColor = .systemBlue

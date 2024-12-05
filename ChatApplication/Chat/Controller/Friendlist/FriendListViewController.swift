@@ -10,7 +10,6 @@ class FriendListViewController: UIViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         // View Controller Setup
         view.backgroundColor = .white
         title = "Freunde"
@@ -19,7 +18,6 @@ class FriendListViewController: UIViewController {
         configureTableView()
         
         configureTabBarItems()
-
         // Freunde laden
         fetchFriends()
     }

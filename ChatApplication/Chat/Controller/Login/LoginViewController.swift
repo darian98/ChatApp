@@ -56,6 +56,9 @@ class LoginViewController: UIViewController {
         }
     }
     @objc func handleLogin() {
+        
+        loginButton.isEnabled = false
+        
         guard let email = emailTextField.text, let password = passwordTextField.text else { return }
         
         AuthService.shared.loginUser(email: email, password: password) { result in
@@ -70,6 +73,7 @@ class LoginViewController: UIViewController {
                 }
             case .failure(let error):
                 print("Fehler bei Anmeldung: \(error)")
+                self.loginButton.isEnabled = true
                 self.showAlert(withTitle: "Anmeldung Fehlgeschlagen", message: error.localizedDescription)
             }
         }
