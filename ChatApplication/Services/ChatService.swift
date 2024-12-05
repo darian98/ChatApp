@@ -200,6 +200,7 @@ class ChatService {
                 return
             }
             if let isTypingArray = data["isTyping"] as? [String] {
+                print("IsTyping-Count: \(isTypingArray.count)")
                     completion(isTypingArray)
             } else {
                 print("Fehler: 'isTyping'-Array nicht gefunden.")

@@ -27,12 +27,16 @@
             fatalError("init(coder:) has not been implemented")
         }
         
+        override func viewWillAppear(_ animated: Bool) {
+            super.viewWillAppear(animated)
+            fetchAllUsers()
+        }
+        
         override func viewDidLoad() {
             super.viewDidLoad()
             view.backgroundColor = .white
             setupSearchBar()
             setupTableView()
-            fetchAllUsers()
             addTapGestureRecognizerToView(action: #selector(dismissKeyboard))
             navigationItem.title = "Alle Nutzer"
         }
@@ -61,6 +65,7 @@
                 do {
                     let users = try await UserService.shared.fetchAllUsers()
                     self.users = users
+                    print("User-Count: \(users.count)")
                     //self.filteredUsers = users
                     DispatchQueue.main.async {
                         self.tableView.reloadData()

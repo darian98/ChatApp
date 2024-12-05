@@ -62,82 +62,6 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
 
     // MARK: - Aufnahme stoppen und hochladen
     /// Beendet die Aufnahme und lädt die Sprachnachricht hoch.
-//    func stopRecording(chatID: String, senderID: String, receiverID: String, displayName: String, completion: @escaping (Result<Void, Error>) -> Void) {
-//        audioRecorder?.stop()
-//        audioRecorder = nil
-//        print("Aufnahme beendet.")
-//        
-//        guard let audioURL = audioFilename else {
-//            print("Keine Aufnahme gefunden.")
-//            completion(.failure(NSError(domain: "AudioService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Keine Aufnahme verfügbar."])))
-//            return
-//        }
-//        
-//        guard FileManager.default.fileExists(atPath: audioURL.path) else {
-//            print("Die Datei existiert nicht am angegebenen Speicherort.")
-//            return
-//        }
-//        
-//        do {
-//            
-//            let audioData = try Data(contentsOf: audioURL)
-//            print("AudioData Roh: \(audioData)")
-//            print("AudioData nach dem recorden hat \(audioData.count)")
-//            let base64String = audioData.base64EncodedString(options: .lineLength64Characters)
-//            print("Base64 String: \(base64String)")
-//            print("Base64-URL: \(base64String)")
-//            print("Audio-Daten geladen. Größe: \(audioData.count) Bytes")
-//            self.saveAudioMessage(chatID: chatID, base64String: base64String, senderID: senderID, receiverID: receiverID, displayName: displayName) { result in
-//                switch result {
-//                case .success:
-//                    print("Sprachnachricht erfolgreich gespeichert")
-//                case .failure(let error):
-//                    print("Fehler beim Speichern der Sprachnachricht mit dem Fehler: \(error.localizedDescription)")
-//                }
-//            }
-//        } catch {
-//            print("Fehler beim Lesen der Audio-Datei: \(error)")
-//            completion(.failure(error))
-//        }
-//    }
-    func stopRecording2(chatID: String, senderID: String, receiverIDs: [String], displayName: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        audioRecorder?.stop()
-        audioRecorder = nil
-        print("Aufnahme beendet.")
-        
-        guard let audioURL = audioFilename else {
-            print("Keine Aufnahme gefunden.")
-            completion(.failure(NSError(domain: "AudioService", code: -1, userInfo: [NSLocalizedDescriptionKey: "Keine Aufnahme verfügbar."])))
-            return
-        }
-        
-        guard FileManager.default.fileExists(atPath: audioURL.path) else {
-            print("Die Datei existiert nicht am angegebenen Speicherort.")
-            return
-        }
-        
-        do {
-            
-            let audioData = try Data(contentsOf: audioURL)
-            print("AudioData nach dem recorden hat \(audioData.count)")
-            let base64String = audioData.base64EncodedString(options: .lineLength64Characters)
-            let randomID = UUID().uuidString
-            print("Base64 String: \(base64String)")
-            print("Base64-URL: \(base64String)")
-            print("Audio-Daten geladen. Größe: \(audioData.count) Bytes")
-            self.saveAudioMessage2(chatID: chatID, messageID: randomID, base64String: base64String, senderID: senderID, receiverIDs: receiverIDs, displayName: displayName) { result in
-                switch result {
-                case .success:
-                    print("Sprachnachricht erfolgreich gespeichert")
-                case .failure(let error):
-                    print("Fehler beim Speichern der Sprachnachricht mit dem Fehler: \(error.localizedDescription)")
-                }
-            }
-        } catch {
-            print("Fehler beim Lesen der Audio-Datei: \(error)")
-            completion(.failure(error))
-        }
-    }
     
     func stopRecording3(chatID: String, senderID: String, receiverIDs: [String], displayName: String, key: SymmetricKey, completion: @escaping (Result<Void, Error>) -> Void) {
         audioRecorder?.stop()
@@ -178,28 +102,6 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
         }
     }
 
-//    // MARK: - Sprachnachricht in Firestore speichern
-//    private func saveAudioMessage(chatID: String, base64String: String, senderID: String, receiverID: String, displayName: String, completion: @escaping (Result<Void, Error>) -> Void) {
-//        let data: [String: Any] = [
-//            "message": base64String,
-//            "receiverID": receiverID,
-//            "senderID": senderID,
-//            "displayName": displayName,
-//            "receiverReadMessage": false,
-//            "timestamp": Timestamp(),
-//            "isAudio": true
-//        ]
-//        
-//        db.collection("chats").document(chatID).collection("messages").addDocument(data: data) { error in
-//            if let error = error {
-//                print("Fehler beim Speichern der Sprachnachricht in Firestore: \(error)")
-//                completion(.failure(error))
-//            } else {
-//                print("Sprachnachricht erfolgreich in Firestore gespeichert.")
-//                completion(.success(()))
-//            }
-//        }
-//    }
     private func saveAudioMessageEncrypted(chatID: String, messageID: String ,base64String: String, senderID: String, receiverIDs: [String], displayName: String, key: SymmetricKey, completion: @escaping (Result<Void, Error>) -> Void) {
         
         guard let encryptedMessage = ChatService.shared.encryptMessage(message: base64String, key: key) else {
@@ -243,31 +145,6 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
             }
         }
     }
-    
-    
-    private func saveAudioMessage2(chatID: String, messageID: String ,base64String: String, senderID: String, receiverIDs: [String], displayName: String, completion: @escaping (Result<Void, Error>) -> Void) {
-        let data: [String: Any] = [
-            "message": base64String,
-            "messageID": messageID,
-            "receiverIDs": receiverIDs,
-            "senderID": senderID,
-            "displayName": displayName,
-            "receiverReadMessage": false,
-            "timestamp": Timestamp(),
-            "isAudio": true
-        ]
-        
-        db.collection("chats").document(chatID).collection("messages").addDocument(data: data) { error in
-            if let error = error {
-                print("Fehler beim Speichern der Sprachnachricht in Firestore: \(error)")
-                completion(.failure(error))
-            } else {
-                print("Sprachnachricht erfolgreich in Firestore gespeichert.")
-                completion(.success(()))
-            }
-        }
-    }
-    
     // MARK: Audio abspielen
     func playAudio(from base64String: String) {
         print("Base64StringCount: \(base64String.count)")
@@ -290,15 +167,9 @@ class AudioService: NSObject, AVAudioRecorderDelegate {
                    audioPlayer = try AVAudioPlayer(data: audioData)
                    audioPlayer?.prepareToPlay()
                    audioPlayer?.play()
-            
-//            let player = try AVAudioPlayer(data: audioData)
-//            player.prepareToPlay()
-//            player.play()
         } catch {
             print("Fehler beim Abspielen der Audiodatei: \(error)")
         }
-        
-        
     }
     
     // MARK: - Hilfsmethode: Speicherort der Dokumente

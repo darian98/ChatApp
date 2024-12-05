@@ -132,13 +132,6 @@ class ConfigureGroupChatVC: UIViewController {
             self.delegate?.didStartGroupChat(with: self.usersForGroupChat, from: self)
         }
     }
-
-    
-//    @objc func didTapStartGroupChatButton() {
-//        print("Button tapped!")
-//        self.dismiss(animated: true)
-//        startChat2(with: usersForGroupChat)
-//    }
     
     // Funktion zum Starten eines Chats
     private func startChat2(with users: [UserModel]) {
@@ -148,7 +141,6 @@ class ConfigureGroupChatVC: UIViewController {
             print("\(user.displayName)")
         }
     }
-    
 }
 
 extension ConfigureGroupChatVC: UITableViewDelegate, UITableViewDataSource {

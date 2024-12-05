@@ -28,7 +28,6 @@ struct ProfileView: View {
                     if editBio {
                         userBioTextField
                     }
-                    
                     saveButton
                 }
                 Spacer().frame(height: 200)
@@ -54,27 +53,40 @@ struct ProfileView: View {
             }
         )
         .toolbar {
-            ToolbarItem(placement: .topBarLeading) {
-                pencilButton
-            }
             ToolbarItem(placement: .topBarTrailing) {
-                logoutButton
+                settingsMenu
             }
         }
     }
 }
 extension ProfileView {
+    
+    private var settingsMenu: some View {
+        Menu {
+            pencilButton
+            logoutButton
+        } label: {
+            Image(systemName: "gearshape")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 24, height: 24)
+        }
+    }
+    
     private var logoutButton: some View {
         Button(action: {
             withAnimation(.spring()) {
                 AuthService.shared.logoutUser()
             }
         }, label: {
-            Image(systemName: "power")
+            Label(
+                title: { Text("Ausloggen") },
+                icon: { Image(systemName: "power") }
+            )
         })
     }
     
-    private var profileImageButton: some View { 
+    private var profileImageButton: some View {
         Button(action: {
             viewModel.showImagePicker.toggle()
         }) {
@@ -110,7 +122,6 @@ extension ProfileView {
         .buttonStyle(.borderedProminent)
         .frame(maxWidth: .infinity, alignment: .center)
         .padding()
-        
     }
     
     private var userInfoText: some View {
@@ -141,11 +152,19 @@ extension ProfileView {
                 editBio.toggle()
             }
         }, label: {
-            Image(systemName: editBio ? "pencil.slash" : "pencil")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 20, height: 20)
-                .tint(editBio ? .green : .blue)
+            Label(
+                title: { 
+                    Text(editBio ? "Stop Editing" : "Edit Profile")
+                        .foregroundStyle(editBio ? .red : .green)
+                },
+                icon: {
+                    Image(systemName: editBio ? "pencil.slash" : "pencil")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 20, height: 20)
+                        .tint(editBio ? .green : .blue)
+                }
+            )
         })
     }
     

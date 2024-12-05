@@ -111,9 +111,9 @@
         
         func configureUIBarButtonItems() {
             let addFriendButton     = UIBarButtonItem(title: "", image: UIImage(systemName: "person.fill.badge.plus"), target: self, action: #selector(addFriend))
-            let callButton          = UIBarButtonItem(title: "", image: UIImage(systemName: "phone.fill"), target: self, action: #selector(startCall))
-            let videoChatButton     = UIBarButtonItem(title: "", image: UIImage(systemName: "video.fill"), target: self, action: #selector(startVideoChat))
-            navigationItem.rightBarButtonItems = [addFriendButton, callButton, videoChatButton]
+            //let callButton          = UIBarButtonItem(title: "", image: UIImage(systemName: "phone.fill"), target: self, action: #selector(startCall))
+            //let videoChatButton     = UIBarButtonItem(title: "", image: UIImage(systemName: "video.fill"), target: self, action: #selector(startVideoChat))
+            navigationItem.rightBarButtonItems = [addFriendButton]
         }
         
         private func setupTypingIndicatorLabel() {
@@ -220,45 +220,45 @@
             self.typingIndicatorLabel.isHidden = false
             self.typingIndicatorLabel.alpha     = 1
             
-            guard !typingUserIDs.isEmpty else {
-                self.typingIndicatorLabel.text = ""
-                return
-            }
             var users: [UserModel] = []
             Task {
                 for typingUserID in typingUserIDs {
                     guard let user = try await UserService.shared.fetchUser(byID: typingUserID) else { return }
                     users.append(user)
                 }
-            }
-            let displayNames = users
+                
+                print("UserCount in configureTypingIndicator: \(users.count)")
+                let displayNames = users
                     .filter { $0.uid != currentUser.uid }
                     .map    {  $0.displayName }
-            
-            // Wenn keine anderen Benutzer schreiben, Label leeren und Methode beenden
-            guard !displayNames.isEmpty else {
-                DispatchQueue.main.async {
-                    self.typingIndicatorLabel.text = ""
+                print("DisplayNames in configureTypingIndicator: \(displayNames.count)")
+                // Wenn keine anderen Benutzer schreiben, Label leeren und Methode beenden
+                guard !displayNames.isEmpty else {
+                    DispatchQueue.main.async {
+                        self.typingIndicatorLabel.text = ""
+                    }
+                    print("Returning after checking displayNames !Empty")
+                    return
                 }
-                return
-            }
-            
-            let formattedString: String
-            switch displayNames.count {
-            case 1:
-                formattedString = "\(displayNames[0]) schreibt..."
-            case 2:
-                formattedString = "\(displayNames[0]) and \(displayNames[1]) schreiben..."
-            default:
-            let firstTwo = displayNames.prefix(2).joined(separator: ",")
-                print("FirstTWo:\(firstTwo)")
-            formattedString = "\(firstTwo) und andere schreiben..."
-            }
-            // Aktualisiere das Label im Main-Thread
-            DispatchQueue.main.async {
-                self.typingIndicatorLabel.text = formattedString
+                print("DisplayNames in IndicatorLabel: \(displayNames.count)")
+                let formattedString: String
+                switch displayNames.count {
+                case 1:
+                    formattedString = "\(displayNames[0]) schreibt..."
+                case 2:
+                    formattedString = "\(displayNames[0]) and \(displayNames[1]) schreiben..."
+                default:
+                    let firstTwo = displayNames.prefix(2).joined(separator: ",")
+                    print("FirstTWo:\(firstTwo)")
+                    formattedString = "\(firstTwo) und andere schreiben..."
+                }
+                // Aktualisiere das Label im Main-Thread
+                DispatchQueue.main.async {
+                    self.typingIndicatorLabel.text = formattedString
+                }
             }
         }
+        
         private func getOtherUsersIDs()  -> [String] {
             var userIDs = [String]()
             for user in usersToChatWith {
@@ -311,14 +311,6 @@
                         print("Stopped recording....")
                     }
                 }
-//                AudioService.shared.stopRecording2(chatID: chatID, senderID: currentUser.uid, receiverIDs: otherUsersIDs, displayName: currentUser.displayName) { result in
-//                    switch result {
-//                    case .failure(let error):
-//                        print("Error stopping Recording after clicking voiceMailButton: \(error.localizedDescription)")
-//                    case .success():
-//                        print("Stopped recording....")
-//                    }
-//                }
             }
         }
         
