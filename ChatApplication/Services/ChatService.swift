@@ -17,43 +17,7 @@ class ChatService {
     static let shared = ChatService()
     private let db = Firestore.firestore()
     
-    func sendMessage2(chatID: String, message: String, receiverIDs: [String] ,senderID: String, displayName: String) {
-        let randomID = UUID().uuidString
-        
-        let data: [String: Any] = [
-            "messageID": randomID,
-            "message": message,
-            "receiverIDs": receiverIDs,
-            "senderID": senderID,
-            "displayName": displayName,
-            "receiverReadMessage": false,
-            "timestamp": Timestamp(),
-            "isAudio": false
-        ]
-        db.collection("chats").document(chatID).collection("messages").addDocument(data: data) { error in
-            if let error = error {
-                print("Error adding message: \(error)")
-            } else {
-                print("Message added successfully to chat \(chatID)")
-                let lastMessageData: [String: Any] = [
-                    "senderID": senderID,
-                    "message" : message
-                ]
-                // Update last message in chat document
-                self.db.collection("chats").document(chatID).updateData([
-                    "lastMessage": lastMessageData,
-                    "timestamp": Timestamp()
-                ]){ error in
-                    if let error = error {
-                        print("Fehler beim Aktualisieren der lastMessage: \(error.localizedDescription)")
-                    } else {
-                        print("lastMessage erfolgreich aktualisiert für Chat \(chatID)")
-                    }
-                }
-            }
-        }
-    }
-    
+
     func sendMessage3(chatID: String, message: String, receiverIDs: [String] ,senderID: String, displayName: String, key: SymmetricKey) {
         let randomID = UUID().uuidString
         
@@ -122,6 +86,7 @@ class ChatService {
                 // Neuer Chat erstellen
                 let chatData: [String: Any] = [
                     "chatID": chatID,
+                    "deleteMessagesAfterSeconds": 0,
                     "lastMessage": "",
                     "participants": userIDs,
                     "isTyping": [],
@@ -220,13 +185,27 @@ class ChatService {
         
         self.db.collection("chats").document(chatID).updateData(updateData) { error in
             if let error = error {
-                print("Fehler beim Aktualisieren der isTyping Liste!")
+                print("Fehler beim Aktualisieren der isTyping Liste: \(error)")
             } else {
                 print("UserID des tippenden Nutzers wurde erfolgreich \(isTyping ? "hinzugefügt" : "entfernt")")
             }
         }
     }
     
+    func updateDeleteMessagesAfterSecondsForChat(chatID: String, seconds: Int) {
+        guard seconds >= 0  else {
+            print("Sekunden dürfen nicht negativ sein.")
+            return
+        }
+        self.db.collection("chats").document(chatID).updateData(["deleteMessagesAfterSeconds": seconds]) { error in
+            if let error = error {
+                print("Fehler beim Aktualisieren der deleteMessagesAfterSeconds: \(error)")
+            } else {
+                print("deleteMessagesAfterSeconds des Chats: \(chatID) wurde erfolgreich auf \(String(seconds)) geändert!")
+            }
+        }
+    
+    }
     // Nachrichten-Listener
     func observeEncryptedMessages(chatID: String, key: SymmetricKey, completion: @escaping ([ChatMessage]) -> Void) {
         db.collection("chats").document(chatID).collection("messages")
@@ -311,6 +290,136 @@ class ChatService {
        }
     }
     
+    func deleteMessagesAfterSeconds(chatID: String, delayInSeconds: Int) {
+        // Verzögerung durch den Timer
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(delayInSeconds)) {
+            // Nach Ablauf der Zeit alle Nachrichten löschen
+            self.db.collection("chats").document(chatID).collection("messages").getDocuments { snapshot, error in
+                if let error = error {
+                    print("Fehler beim Abrufen der Nachrichten: \(error.localizedDescription)")
+                    return
+                }
+                
+                guard let documents = snapshot?.documents else {
+                    print("Keine Nachrichten gefunden.")
+                    return
+                }
+                
+                // Alle Nachrichten löschen
+                for document in documents {
+                    self.db.collection("chats").document(chatID).collection("messages").document(document.documentID).delete { error in
+                        if let error = error {
+                            print("Fehler beim Löschen der Nachricht: \(error.localizedDescription)")
+                        } else {
+                            print("Nachricht erfolgreich gelöscht.")
+                        }
+                    }
+                }
+                self.updateLastMessageAfterDestroyingMessages(chatID: chatID)
+            }
+        }
+    }
+    
+    func deleteMessagesFromChat(chat: Chat) {
+        let delayInSeconds = chat.deleteMessagesAfterSeconds
+        
+        // Verzögerung durch den Timer
+        DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(delayInSeconds)) {
+            // Nach Ablauf der Zeit alle Nachrichten löschen
+            self.db.collection("chats").document(chat.chatID).collection("messages").getDocuments { snapshot, error in
+                if let error = error {
+                    print("Fehler beim Abrufen der Nachrichten: \(error.localizedDescription)")
+                    return
+                }
+                
+                guard let documents = snapshot?.documents else {
+                    print("Keine Nachrichten gefunden.")
+                    return
+                }
+                
+                // Alle Nachrichten löschen
+                for document in documents {
+                    self.db.collection("chats").document(chat.chatID).collection("messages").document(document.documentID).delete { error in
+                        if let error = error {
+                            print("Fehler beim Löschen der Nachricht: \(error.localizedDescription)")
+                        } else {
+                            print("Nachricht erfolgreich gelöscht.")
+                        }
+                    }
+                }
+                self.updateLastMessageAfterDestroyingMessages(chatID: chat.chatID)
+            }
+        }
+    }
+
+
+    
+    func updateLastMessageAfterDestroyingMessages(chatID: String) {
+        self.db.collection("chats").document(chatID).getDocument { document, error in
+            if let error = error {
+                print("Could not get document \(error)")
+                return
+            }
+            
+            if let document = document, document.exists, var chatData = document.data() {
+                if var lastMessageData = chatData["lastMessage"] as? [String: Any] {
+                    lastMessageData["message"] = ""
+                    
+                    self.db.collection("chats").document(chatID).updateData(
+                        ["lastMessage": lastMessageData]
+                    ) { error in
+                        if let error = error {
+                            print("Error updating lastMessage after destroying Messages: \(error)")
+                        } else {
+                            print("LastMessage erfolgreich gelöscht / leerem String zugewiesen!")
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    func getChat(withID chatID: String, completion: @escaping (Chat?) -> Void) {
+        db.collection("chats").document(chatID).getDocument { document, error in
+            if let error = error {
+                print("Fehler beim Abrufen des Chat-Dokuments: \(error)")
+                completion(nil)
+                return
+            }
+            
+            guard let document = document, document.exists, let data = document.data() else {
+                print("Chat-Dokument existiert nicht oder ist leer.")
+                completion(nil)
+                return
+            }
+            
+            // Extrahieren der Felder aus den Chat-Daten
+            guard let deleteMessagesAfterSeconds = data["deleteMessagesAfterSeconds"] as? Int,
+                  let lastMessageData = data["lastMessage"] as? [String: Any],
+                  let lastMessage = LastMessage(from: lastMessageData),
+                  let participantIDs = data["participants"] as? [String],
+                  let isTyping = data["isTyping"] as? [String],
+                  let timestamp = data["timestamp"] as? Timestamp else {
+                print("Fehlende oder ungültige Daten im Chat-Dokument.")
+                completion(nil)
+                return
+            }
+            
+            // Chat-Model erstellen
+            let chat = Chat(
+                chatID: chatID,
+                deleteMessagesAfterSeconds: deleteMessagesAfterSeconds,
+                lastMessage: lastMessage,
+                participantIDs: participantIDs,
+                isTyping: isTyping,
+                timestamp: timestamp.dateValue(),
+                messages: [] // Initial leer, kann später über andere Funktionen geladen werden
+            )
+            
+            completion(chat)
+        }
+    }
+    
     func observeChatsForUser2(withID userID: String, completion: @escaping ([Chat]) -> Void) {
         db.collection("chats")
             .whereField("participants", arrayContains: userID) // Filtert Chats, in denen der Benutzer beteiligt ist
@@ -332,6 +441,7 @@ class ChatService {
                 for document in documents {
                     let data = document.data()
                     guard let chatID = data["chatID"] as? String,
+                          let deleteMessagesAfterSeconds = data["deleteMessagesAfterSeconds"] as? Int,
                           let lastMessageData = data["lastMessage"] as? [String: Any], // Hole das Dictionary
                           let lastMessage = LastMessage(from: lastMessageData), // Erstelle ein LastMessage-Objekt
                           let participantsIDs = data["participants"] as? [String],
@@ -344,6 +454,7 @@ class ChatService {
                     print("Last Message for chat: \(chatID): \(lastMessage.message)")
                     let chat = Chat(
                         chatID: chatID,
+                        deleteMessagesAfterSeconds: deleteMessagesAfterSeconds,
                         lastMessage: lastMessage,
                         participantIDs: participantsIDs,
                         isTyping: isTyping,
@@ -357,67 +468,67 @@ class ChatService {
             }
     }
     
-    func observeChatsForUser3(withID userID: String, getKeyForChat: @escaping (String) -> SymmetricKey?,  completion: @escaping ([Chat]) -> Void) {
-        db.collection("chats")
-            .whereField("participants", arrayContains: userID) // Filtert Chats, in denen der Benutzer beteiligt ist
-            .addSnapshotListener { snapshot, error in
-                if let error = error {
-                    print("Fehler beim Abrufen der Chats: \(error)")
-                    return
-                }
-                
-                guard let documents = snapshot?.documents else {
-                    print("Keine Dokumente gefunden")
-                    return
-                }
-                
-                print("DocumentCount in Chats: \(documents.count)")
-                
-                var chats: [Chat] = []
-                
-                for document in documents {
-                    let data = document.data()
-                    guard let chatID = data["chatID"] as? String,
-                          let lastMessageData = data["lastMessage"] as? [String: Any], // Hole das Dictionary
-                          let lastMessage = LastMessage(from: lastMessageData), // Erstelle ein LastMessage-Objekt
-                          let participantsIDs = data["participants"] as? [String],
-                          let isTyping = data["isTyping"] as? [String],
-                          let timestamp = data["timestamp"] as? Timestamp,
-                          let key = getKeyForChat(chatID) else {
-                          print("Fehler beim Verarbeiten eines Dokuments")
-                        // Lösche das fehlerhafte Dokument
-                        continue
-                    }
-                    if let encryptedSenderID = lastMessageData["senderID"] as? String,
-                    let encryptedMessage = lastMessageData["message"] as? String,
-                    let encryptedMessageData = Data(base64Encoded: encryptedMessage) {
-                        if let decryptedSenderID = self.decryptMessage(encryptedData: encryptedSenderID.data(using: .utf8)!, key: key),
-                           let decryptedMessage  = self.decryptMessage(encryptedData: encryptedMessageData, key: key) {
-                            // Erstelle das LastMessage-Objekt mit entschlüsselten Werten
-                            let lastMessageDataDecrypted: [String: Any] = [
-                            "senderID": decryptedSenderID,
-                            "message": decryptedMessage
-                            ]
-                            
-                            if let lastMessage = LastMessage(from: lastMessageDataDecrypted) {
-                                let chat = Chat(
-                                    chatID: chatID,
-                                    lastMessage: lastMessage,
-                                    participantIDs: participantsIDs,
-                                    isTyping: isTyping,
-                                    timestamp: timestamp.dateValue(),
-                                    messages: []
-                                )
-                                chats.append(chat)
-                            } else {
-                                print("Fehler beim erstellen der LastMessage aus den entschlüsselten Daten!")
-                            }
-                        }
-                    }
-                }
-                completion(chats)
-            }
-    }
+//    func observeChatsForUser3(withID userID: String, getKeyForChat: @escaping (String) -> SymmetricKey?,  completion: @escaping ([Chat]) -> Void) {
+//        db.collection("chats")
+//            .whereField("participants", arrayContains: userID) // Filtert Chats, in denen der Benutzer beteiligt ist
+//            .addSnapshotListener { snapshot, error in
+//                if let error = error {
+//                    print("Fehler beim Abrufen der Chats: \(error)")
+//                    return
+//                }
+//                
+//                guard let documents = snapshot?.documents else {
+//                    print("Keine Dokumente gefunden")
+//                    return
+//                }
+//                
+//                print("DocumentCount in Chats: \(documents.count)")
+//                
+//                var chats: [Chat] = []
+//                
+//                for document in documents {
+//                    let data = document.data()
+//                    guard let chatID = data["chatID"] as? String,
+//                          let lastMessageData = data["lastMessage"] as? [String: Any], // Hole das Dictionary
+//                          let lastMessage = LastMessage(from: lastMessageData), // Erstelle ein LastMessage-Objekt
+//                          let participantsIDs = data["participants"] as? [String],
+//                          let isTyping = data["isTyping"] as? [String],
+//                          let timestamp = data["timestamp"] as? Timestamp,
+//                          let key = getKeyForChat(chatID) else {
+//                          print("Fehler beim Verarbeiten eines Dokuments")
+//                        // Lösche das fehlerhafte Dokument
+//                        continue
+//                    }
+//                    if let encryptedSenderID = lastMessageData["senderID"] as? String,
+//                    let encryptedMessage = lastMessageData["message"] as? String,
+//                    let encryptedMessageData = Data(base64Encoded: encryptedMessage) {
+//                        if let decryptedSenderID = self.decryptMessage(encryptedData: encryptedSenderID.data(using: .utf8)!, key: key),
+//                           let decryptedMessage  = self.decryptMessage(encryptedData: encryptedMessageData, key: key) {
+//                            // Erstelle das LastMessage-Objekt mit entschlüsselten Werten
+//                            let lastMessageDataDecrypted: [String: Any] = [
+//                            "senderID": decryptedSenderID,
+//                            "message": decryptedMessage
+//                            ]
+//                            
+//                            if let lastMessage = LastMessage(from: lastMessageDataDecrypted) {
+//                                let chat = Chat(
+//                                    chatID: chatID,
+//                                    lastMessage: lastMessage,
+//                                    participantIDs: participantsIDs,
+//                                    isTyping: isTyping,
+//                                    timestamp: timestamp.dateValue(),
+//                                    messages: []
+//                                )
+//                                chats.append(chat)
+//                            } else {
+//                                print("Fehler beim erstellen der LastMessage aus den entschlüsselten Daten!")
+//                            }
+//                        }
+//                    }
+//                }
+//                completion(chats)
+//            }
+//    }
     
     func encryptMessage(message: String, key: SymmetricKey) -> Data? {
         let data = message.data(using: .utf8)!
@@ -493,22 +604,4 @@ class ChatService {
             let status = SecItemDelete(query as CFDictionary)
             return status == errSecSuccess
         }
-
-    
-
-//    func sendLocalNotification(title: String, body: String) {
-//        let content = UNMutableNotificationContent()
-//        content.title = title
-//        content.body = body
-//        content.sound = .default
-//        // Triggert die Benachrichtigung sofort
-//        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 1, repeats: false)
-//        // Identifikator für die Benachrichtigung
-//        let request = UNNotificationRequest(identifier: UUID().uuidString, content: content, trigger: trigger)
-//        UNUserNotificationCenter.current().add(request) { error in
-//            if let error = error {
-//                print("Fehler beim Senden der lokalen Benachrichtigung: \(error)")
-//            }
-//        }
-//    }
 }

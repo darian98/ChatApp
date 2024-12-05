@@ -13,12 +13,21 @@ struct ProfileView: View {
     @ObservedObject var viewModel: ProfileViewModel
     @State private var editBio = false
     
-    var currentUser: UserModel
-    
     var body: some View {
         ScrollView(showsIndicators: false) {
-            VStack(alignment: .center) {
-                profileImageButton
+            VStack() {
+                
+                HStack(alignment: .top) {
+                    profileImageButton
+                        .frame(alignment: .leading)
+                    
+                    Text("Freunde: \(viewModel.currentUser.friends.count)")
+                        .frame(alignment: .top)
+                    
+                    Spacer()
+                    
+                }
+                
                 
                 VStack(alignment: .leading) {
                     userInfoText
@@ -34,7 +43,16 @@ struct ProfileView: View {
             }
         }
         .onAppear {
-            viewModel.fetchProfileData(currentUserID: currentUser.uid)
+            Task {
+                let friendList: [Friend] = []
+                FriendService.shared.fetchFriends(for: viewModel.currentUser.uid) { friends in
+                        let friendList = friends
+                        DispatchQueue.main.async {
+                            viewModel.currentUser.friends = friendList
+                        }
+                }
+            }
+            viewModel.fetchProfileData(currentUserID: viewModel.currentUser.uid)
         }
         .padding()
         .sheet(isPresented: $viewModel.showImagePicker) {
@@ -94,7 +112,7 @@ extension ProfileView {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 200, height: 200)
+                    .frame(width: 120, height: 120)
                     .clipShape(Circle())
             } else {
                 ZStack {
@@ -113,7 +131,7 @@ extension ProfileView {
     private var saveButton: some View {
         Button("Speichern") {
             withAnimation(.spring()) {
-                viewModel.saveProfileDataWithCompressedImage(currentUserID: currentUser.uid)
+                viewModel.saveProfileDataWithCompressedImage(currentUserID: viewModel.currentUser.uid)
                 if editBio {
                     editBio.toggle()
                 }
@@ -126,9 +144,9 @@ extension ProfileView {
     
     private var userInfoText: some View {
         VStack(alignment: .leading) {
-            Text("\(currentUser.displayName)")
+            Text("\(viewModel.currentUser.displayName)")
                 .font(.title2)
-            Text("\(currentUser.email)")
+            Text("\(viewModel.currentUser.email)")
                 .font(.subheadline)
                 .foregroundColor(.gray)
         }
@@ -154,7 +172,7 @@ extension ProfileView {
         }, label: {
             Label(
                 title: { 
-                    Text(editBio ? "Stop Editing" : "Edit Profile")
+                    Text(editBio ? "Nicht mehr editieren" : "Profil anpassen")
                         .foregroundStyle(editBio ? .red : .green)
                 },
                 icon: {

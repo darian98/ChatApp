@@ -20,6 +20,14 @@ class ProfileViewModel: ObservableObject {
     @Published var bioTextInput: String = ""
     @Published var bio: String = ""
     
+    @Published var currentUser: UserModel
+    
+    
+    init(currentUser: UserModel) {
+        self.currentUser = currentUser
+    }
+    
+    
     
     func saveProfileData(currentUserID: String) {
         let uid = currentUserID

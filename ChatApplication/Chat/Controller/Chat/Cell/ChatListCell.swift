@@ -113,10 +113,15 @@ class ChatListCell: UITableViewCell {
         // UI aktualisieren
         DispatchQueue.main.async {
             self.participantsLabel.text = participantNames.joined(separator: ", ")
-            if chat.lastMessage.isAudio {
-                self.lastMessageLabel.text = "\(lastMessageSenderName): Sprachnotiz"
+            
+            if !chat.lastMessage.message.isEmpty {
+                if chat.lastMessage.isAudio {
+                    self.lastMessageLabel.text = "\(lastMessageSenderName): Sprachnotiz"
+                } else {
+                    self.lastMessageLabel.text = "\(lastMessageSenderName): \(chat.lastMessage.message)"
+                }
             } else {
-                self.lastMessageLabel.text = "\(lastMessageSenderName): \(chat.lastMessage.message)"
+                self.lastMessageLabel.text = ""
             }
         }
         

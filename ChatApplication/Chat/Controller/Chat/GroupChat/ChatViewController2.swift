@@ -64,6 +64,9 @@
             super.viewWillAppear(animated)
             NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
             NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+            
+            //ChatService.shared.deleteMessagesFromChat(chat: chat)
+            
         }
 
         override func viewWillDisappear(_ animated: Bool) {
@@ -71,9 +74,9 @@
             NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
             NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
             
-            if messages.isEmpty {
-                ChatService.shared.deleteChat(chatID: chatID)
-            }
+//            if messages.isEmpty {
+//                ChatService.shared.deleteChat(chatID: chatID)
+//            }
         }
         func setupUIWithStackView() {
                 view.backgroundColor = .systemBackground
@@ -110,10 +113,9 @@
            }
         
         func configureUIBarButtonItems() {
-            let addFriendButton     = UIBarButtonItem(title: "", image: UIImage(systemName: "person.fill.badge.plus"), target: self, action: #selector(addFriend))
-            //let callButton          = UIBarButtonItem(title: "", image: UIImage(systemName: "phone.fill"), target: self, action: #selector(startCall))
-            //let videoChatButton     = UIBarButtonItem(title: "", image: UIImage(systemName: "video.fill"), target: self, action: #selector(startVideoChat))
-            navigationItem.rightBarButtonItems = [addFriendButton]
+            let deletingMessagesTimer   = UIBarButtonItem(title: "", image: UIImage(systemName: "timer"), target: self, action: #selector(deleteMessages))
+            let addFriendButton         = UIBarButtonItem(title: "", image: UIImage(systemName: "person.fill.badge.plus"), target: self, action: #selector(addFriend))
+            navigationItem.rightBarButtonItems  = [addFriendButton, deletingMessagesTimer]
         }
         
         private func setupTypingIndicatorLabel() {
@@ -122,6 +124,10 @@
             typingIndicatorLabel.font = UIFont.italicSystemFont(ofSize: 18)
             typingIndicatorLabel.text = "" // Anfangs leer
             typingIndicatorLabel.textAlignment = .center
+        }
+        
+        @objc func deleteMessages() {
+            showDeleteMessagesTimerAlert(chatID: chatID)
         }
         
         @objc func startCall() {
@@ -339,7 +345,20 @@
             guard let messageText = messageTextField.text, !messageText.isEmpty else { return }
             
             //ChatService.shared.sendMessage2(chatID: chatID, message: messageText, receiverIDs: otherUserIDS, senderID: currentUser.uid, displayName: currentUser.displayName)
-            ChatService.shared.sendMessage3(chatID: chatID, message: messageText, receiverIDs: otherUserIDS, senderID: currentUser.uid, displayName: currentUser.displayName, key: chatKey)
+            
+            Task {
+                ChatService.shared.sendMessage3(chatID: chatID, message: messageText, receiverIDs: otherUserIDS, senderID: currentUser.uid, displayName: currentUser.displayName, key: chatKey)
+                ChatService.shared.getChat(withID: chatID) { chat in
+                    if let chat = chat {
+                        print("chat in viewWillAppear vom ChatViewController2 geladen: \(chat.chatID)")
+                        if chat.deleteMessagesAfterSeconds > 0 {
+                            ChatService.shared.deleteMessagesFromChat(chat: chat)
+                        }
+                    } else {
+                        print("Chat konnte nicht geladen werden!")
+                    }
+                }
+            }
             
             messageTextField.text = ""
         }

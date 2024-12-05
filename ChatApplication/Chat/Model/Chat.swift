@@ -9,6 +9,7 @@ import Foundation
 
 struct Chat {
     let chatID: String
+    let deleteMessagesAfterSeconds: Int
     let lastMessage: LastMessage
     let participantIDs: [String]
     let isTyping: [String]

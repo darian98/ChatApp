@@ -15,31 +15,6 @@ extension UIViewController {
         alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
         present(alertController, animated: true, completion: nil)
     }
-    // Funktion zum Anzeigen des Alerts
-      func showFriendRequestAlert(for request: FriendRequest) {
-          let alert = UIAlertController(title: "Freundschaftsanfrage", message: "Möchtest du diese Freundschaftsanfrage annehmen?", preferredStyle: .alert)
-          
-          let acceptAction = UIAlertAction(title: "Annehmen", style: .default) { _ in
-              // Freundschaftsanfrage annehmen
-              FriendService.shared.respondToFriendRequest(requestID: request.id, accept: true)
-              print("Anfrage angenommen: \(request.senderID)")
-          }
-          
-          let rejectAction = UIAlertAction(title: "Ablehnen", style: .destructive) { _ in
-              // Freundschaftsanfrage ablehnen
-              FriendService.shared.respondToFriendRequest(requestID: request.id, accept: false)
-              print("Anfrage abgelehnt: \(request.senderID)")
-          }
-          
-          // Füge die Aktionen zum Alert hinzu
-          alert.addAction(acceptAction)
-          alert.addAction(rejectAction)
-          
-          // Präsentieren des Alerts
-          self.present(alert, animated: true, completion: nil)
-      }
-    
-    
     func showAddFriendAlert(senderID: String, for chatParticipiants: [UserModel]) {
         
         var notAlreadyFriendList    = [UserModel]()
@@ -87,6 +62,37 @@ extension UIViewController {
         }
     }
 }
+    
+    func showDeleteMessagesTimerAlert(chatID: String) {
+        let alertController = UIAlertController(title: "Selbstzerstörende Nachrichten", message: "Gib die Anzahl der Sekunden ein, nach denen Nachrichten gelöscht werden sollen.", preferredStyle: .alert)
+            // Füge ein Textfeld für die Eingabe hinzu
+            alertController.addTextField { textField in
+                textField.placeholder = "Sekunden eingeben"
+                textField.keyboardType = .numberPad // Nur Zahlen erlauben
+            }
+            // Füge den "Abbrechen"-Button hinzu
+            let cancelAction = UIAlertAction(title: "Abbrechen", style: .cancel, handler: nil)
+            
+            // Füge den "OK"-Button hinzu, um die Eingabe zu verarbeiten
+            let okAction = UIAlertAction(title: "Timer setzen", style: .default) { [weak alertController] _ in
+                guard let textField = alertController?.textFields?.first,
+                      let secondsText = textField.text,
+                      let seconds = Int(secondsText), seconds > 0 else {
+                          print("Ungültige Eingabe")
+                          return
+                }
+                // Deine Logik zum Löschen der Nachrichten nach der angegebenen Zeit
+                ChatService.shared.deleteMessagesAfterSeconds(chatID: chatID, delayInSeconds: seconds)
+                ChatService.shared.updateDeleteMessagesAfterSecondsForChat(chatID: chatID, seconds: seconds)
+                
+            }
+            // Füge die Aktionen hinzu
+            alertController.addAction(cancelAction)
+            alertController.addAction(okAction)
+            // Zeige den AlertController an
+            self.present(alertController, animated: true, completion: nil)
+    }
+    
     
     func addTapGestureRecognizerToView(action: Selector, delegate: UIGestureRecognizerDelegate? = nil) {
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: action)

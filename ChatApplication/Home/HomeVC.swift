@@ -13,10 +13,11 @@ class HomeVC: UITabBarController {
     var currentUser: UserModel
     var chats: [Chat] = []
     var friendRequestsForCurrentUser: [FriendRequest] = []
-    var profileViewModel = ProfileViewModel()
+    var profileViewModel: ProfileViewModel
     
     init(currentUser: UserModel) {
         self.currentUser = currentUser
+        self.profileViewModel = ProfileViewModel(currentUser: currentUser)
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -50,7 +51,7 @@ class HomeVC: UITabBarController {
         let navFriendListVC = UINavigationController(rootViewController: friendListVC)
         navFriendListVC.tabBarItem = UITabBarItem(title: "Freunde", image: UIImage(systemName: "person.3"), tag: 3)
         
-        let profileView = ProfileView(viewModel: profileViewModel, currentUser: currentUser)
+        let profileView = ProfileView(viewModel: profileViewModel)
         let profileViewHostingController = UIHostingController(rootView: profileView)
         let navProfileViewHostingController = UINavigationController(rootViewController: profileViewHostingController)
         navProfileViewHostingController.tabBarItem = UITabBarItem(title: "Profil", image: UIImage(systemName: "person.circle"), tag: 4)
