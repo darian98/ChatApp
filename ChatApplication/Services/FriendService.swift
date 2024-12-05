@@ -44,9 +44,6 @@ class FriendService {
             completion(isAlreadyFriend)
         }
     }
-
-    
-    
     // Methode, um Freundschaftsanfragen für den aktuellen Benutzer zu beobachten
         func observeFriendRequests(for userID: String, completion: @escaping ([FriendRequest]) -> Void) {
             db.collection("friendRequests")
@@ -80,6 +77,59 @@ class FriendService {
                }
            }
        }
+    
+    func deleteFriend(userID: String, friendID: String, completion: @escaping (Bool) -> Void) {
+        let userFriendsCollection = db.collection("users").document(userID).collection("friends")
+        userFriendsCollection.whereField("friendID", isEqualTo: friendID).getDocuments { snapshot, error in
+            if let error = error {
+                print("Error fetching friend's document for user: \(error)")
+                completion(false)
+                return
+            }
+            
+            guard let documents = snapshot?.documents else {
+                print("No friend document found for user.")
+                completion(false)
+                return
+            }
+            
+            for document in documents {
+                document.reference.delete { error in
+                    if let error = error {
+                        print("Error deleting Friend document for user \(error)")
+                        completion(false)
+                    }
+                }
+            }
+        }
+        
+        let friendFriendsCollection = db.collection("users").document(friendID).collection("friends")
+        friendFriendsCollection.whereField("friendID", isEqualTo: userID).getDocuments { snapshot, error in
+            if let error = error {
+                print("Error fetching friend's document for friend: \(error)")
+                completion(false)
+                return
+            }
+            
+            guard let documents = snapshot?.documents else {
+                print("No friend document found for friend.")
+                completion(false)
+                return
+            }
+            
+            for document in documents {
+                document.reference.delete { error in
+                    if let error = error {
+                        print("Error deleting Friend document for friend: \(error)")
+                        completion(false)
+                    }
+                }
+            }
+        }
+        completion(true)
+    }
+    
+    
     private func addFriend(requestID: String) {
         // Hole die Freundschaftsanfrage, um Sender- und Empfänger-ID zu bekommen
         db.collection("friendRequests").document(requestID).getDocument { document, error in

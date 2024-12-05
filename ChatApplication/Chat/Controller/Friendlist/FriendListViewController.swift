@@ -193,6 +193,16 @@ extension FriendListViewController: UITableViewDelegate {
             return "Freunde"
         }
     }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
+        let friend = friends[indexPath.row]
+        
+        if indexPath.section != 0 {
+            self.showOnFriendClickedAlert(userID: userID, friendID: friend.friendID, viewController: self)
+        }
+    }
+    
 }
 extension FriendListViewController: ConfigureGroupChatDelegate {
     func didStartGroupChat(with users: [UserModel], from configureGroupChatVC: ConfigureGroupChatVC) {

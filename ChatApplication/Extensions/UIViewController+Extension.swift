@@ -63,6 +63,36 @@ extension UIViewController {
     }
 }
     
+    func showOnFriendClickedAlert(userID: String, friendID: String, viewController: UIViewController) {
+        let alertController = UIAlertController(title: "", message: "Wähle deine Aktion", preferredStyle: .actionSheet)
+        
+        let deleteFriendAction  = UIAlertAction(title: "Freund löschen", style: .destructive) { _ in
+            Task {
+                FriendService.shared.deleteFriend(userID: userID, friendID: friendID) { deletedSuccessfull in
+                    if deletedSuccessfull {
+                        print("Freund wurde erfolgreich entfernt.")
+                    } else {
+                        print("Fehler beim Löschen des Freundes.")
+                    }
+                }
+            }
+        }
+        let sendMessageAction   = UIAlertAction(title: "Nachricht senden", style: .default) { _ in
+            Task {
+                guard let currentUser = try await UserService.shared.fetchUser(byID: userID) else { return}
+                guard let friendUser = try await UserService.shared.fetchUser(byID: friendID) else { return }
+                ChatService.shared.startChat2(currentUser: currentUser, with: [friendUser], viewController: viewController)
+            }
+        }
+        let cancelButton        = UIAlertAction(title: "Abbrechen", style: .cancel, handler: nil)
+        
+        alertController.addAction(deleteFriendAction)
+        alertController.addAction(sendMessageAction)
+        alertController.addAction(cancelButton)
+        self.present(alertController, animated: true, completion: nil)
+        
+    }
+    
     func showDeleteMessagesTimerAlert(chatID: String) {
         let alertController = UIAlertController(title: "Selbstzerstörende Nachrichten", message: "Gib die Anzahl der Sekunden ein, nach denen Nachrichten gelöscht werden sollen.", preferredStyle: .alert)
             // Füge ein Textfeld für die Eingabe hinzu

@@ -290,6 +290,8 @@ class ChatService {
        }
     }
     
+    
+    // MARK: Wird im Alert genutzt, bei dem der User die Sekunden des Timers definiert
     func deleteMessagesAfterSeconds(chatID: String, delayInSeconds: Int) {
         // Verzögerung durch den Timer
         DispatchQueue.main.asyncAfter(deadline: .now() + .seconds(delayInSeconds)) {
@@ -320,6 +322,7 @@ class ChatService {
         }
     }
     
+    //MARK: Wird genutzt, nachdem eine Nachricht versendet wurde!
     func deleteMessagesFromChat(chat: Chat) {
         let delayInSeconds = chat.deleteMessagesAfterSeconds
         
