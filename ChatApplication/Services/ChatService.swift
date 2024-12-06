@@ -125,7 +125,7 @@ class ChatService {
     func updateMessageRead(chatID: String, currentUserID: String) {
         // Nachrichten abrufen, bei denen der receiverID mit der currentUserID übereinstimmt
         db.collection("chats").document(chatID).collection("messages")
-            .whereField("receiverIDs", isEqualTo: currentUserID) // Nur Nachrichten des aktuellen Benutzers abrufen
+            .whereField("receiverIDs", arrayContains: currentUserID) // Nur Nachrichten des aktuellen Benutzers abrufen
             .whereField("receiverReadMessage", isEqualTo: false) // Optional: Nur Nachrichten, die noch nicht gelesen wurden
             .getDocuments { snapshot, error in
                 if let error = error {
