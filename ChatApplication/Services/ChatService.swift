@@ -192,7 +192,7 @@ class ChatService {
         }
     }
     
-    func updateDeleteMessagesAfterSecondsForChat(chatID: String, seconds: Int) {
+    func updateDeleteMessagesAfterSecondsForChat(chatID: String, seconds: Int, completion: @escaping (Bool) -> Void) {
         guard seconds >= 0  else {
             print("Sekunden dürfen nicht negativ sein.")
             return
@@ -200,8 +200,10 @@ class ChatService {
         self.db.collection("chats").document(chatID).updateData(["deleteMessagesAfterSeconds": seconds]) { error in
             if let error = error {
                 print("Fehler beim Aktualisieren der deleteMessagesAfterSeconds: \(error)")
+                completion(false)
             } else {
                 print("deleteMessagesAfterSeconds des Chats: \(chatID) wurde erfolgreich auf \(String(seconds)) geändert!")
+                completion(true)
             }
         }
     

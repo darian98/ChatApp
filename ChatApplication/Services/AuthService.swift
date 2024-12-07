@@ -12,7 +12,6 @@ import FirebaseFirestore
 class AuthService {
     static let shared = AuthService()
     
-    
     func registerUser(email: String, password: String, displayName: String, completion: @escaping (Result<User, Error>) -> Void) {
         Auth.auth().createUser(withEmail: email, password: password) { authResult, error in
             if let error = error {

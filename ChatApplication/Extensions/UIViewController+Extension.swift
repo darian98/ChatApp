@@ -9,14 +9,18 @@ import Foundation
 import UIKit
 
 
+enum UpdatedTimerState {
+    case failed, active, inactive
+}
+
 extension UIViewController {
     func showAlert(withTitle title: String, message: String) {
         let alertController = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alertController.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
         present(alertController, animated: true, completion: nil)
     }
+    
     func showAddFriendAlert(senderID: String, for chatParticipiants: [UserModel]) {
-        
         var notAlreadyFriendList    = [UserModel]()
         var alreadyFriendsList      = [UserModel]()
         let dispatchGroup = DispatchGroup()
@@ -94,7 +98,7 @@ extension UIViewController {
         
     }
     
-    func showDeleteMessagesTimerAlert(chatID: String) {
+    func showDeleteMessagesTimerAlert(chatID: String, completion: @escaping (UpdatedTimerState) -> Void) {
         let alertController = UIAlertController(title: "Selbstzerstörende Nachrichten", message: "Nach wie vielen Sekunden sollen die Nachrichten zerstört werden?", preferredStyle: .alert)
             // Füge ein Textfeld für die Eingabe hinzu
             alertController.addTextField { textField in
@@ -114,12 +118,32 @@ extension UIViewController {
                 }
                 // Deine Logik zum Löschen der Nachrichten nach der angegebenen Zeit
                 ChatService.shared.deleteMessagesAfterSeconds(chatID: chatID, delayInSeconds: seconds)
-                ChatService.shared.updateDeleteMessagesAfterSecondsForChat(chatID: chatID, seconds: seconds)
+                ChatService.shared.updateDeleteMessagesAfterSecondsForChat(chatID: chatID, seconds: seconds) { success in
+                    DispatchQueue.main.async {
+                        if success {
+                            print("Timer zum Löschen der Nachrichten erfolgreich geupdated!")
+                            completion(.active)
+                        } else {
+                            print("Fehler beim Updaten des Timers!")
+                            completion(.failed)
+                        }
+                    }
+                }
                 
             }
             
         let deleteTimerAction = UIAlertAction(title: "Timer löschen", style: .destructive) { _ in
-            ChatService.shared.updateDeleteMessagesAfterSecondsForChat(chatID: chatID, seconds: 0)
+            ChatService.shared.updateDeleteMessagesAfterSecondsForChat(chatID: chatID, seconds: 0) { success in
+                DispatchQueue.main.async {
+                    if success {
+                        print("Timer zum Löschen der Nachrichten erfolgreich auf 0 gesetzt!")
+                        completion(.inactive)
+                    } else {
+                        print("Fehler beim Löschen (auf 0 Setzen) des Timers!")
+                        completion(.failed)
+                    }
+                }
+            }
         }
         
             // Füge die Aktionen hinzu

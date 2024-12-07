@@ -19,6 +19,7 @@
         let sendButton = UIButton(type: .system)
         let typingIndicatorLabel = UILabel()
         var messageInputContainerBottomConstraint: NSLayoutConstraint!
+        var destroyingMessagesTimer = UIBarButtonItem()
         
         var messages: [ChatMessage] = []
         let currentUser: UserModel
@@ -114,8 +115,10 @@
         
         func configureUIBarButtonItems() {
             let deletingMessagesTimer   = UIBarButtonItem(title: "", image: UIImage(systemName: "timer"), target: self, action: #selector(deleteMessages))
+            self.destroyingMessagesTimer = deletingMessagesTimer
+            
             let addFriendButton         = UIBarButtonItem(title: "", image: UIImage(systemName: "person.fill.badge.plus"), target: self, action: #selector(addFriend))
-            navigationItem.rightBarButtonItems  = [addFriendButton, deletingMessagesTimer]
+            navigationItem.rightBarButtonItems  = [addFriendButton, destroyingMessagesTimer]
         }
         
         private func setupTypingIndicatorLabel() {
@@ -127,7 +130,18 @@
         }
         
         @objc func deleteMessages() {
-            showDeleteMessagesTimerAlert(chatID: chatID)
+            showDeleteMessagesTimerAlert(chatID: chatID) { updatedTimerState in
+                switch updatedTimerState {
+                case .failed:
+                    print("Failed to Update Timer")
+                case.inactive:
+                    print("Timer wurde deaktiviert")
+                    self.destroyingMessagesTimer.tintColor = .systemBlue
+                case .active:
+                    print("Timer wurde aktiviert!")
+                    self.destroyingMessagesTimer.tintColor = .systemGreen
+                }
+            }
         }
         
         @objc func startCall() {

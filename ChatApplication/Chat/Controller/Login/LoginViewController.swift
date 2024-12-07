@@ -48,7 +48,9 @@ class LoginViewController: UIViewController {
         AuthService.shared.registerUser(email: email, password: password, displayName: displayName) { result in
             switch result {
             case .success(let user):
-                print("Registrierung erfolgreic USER_ID: \(user.uid)")
+                let successMessage = "Registrierung erfolgreic USER_ID: \(user.uid)"
+                print(successMessage)
+                self.showAlert(withTitle: "Erfolgreich registriert!", message: successMessage)
             case .failure(let error):
                 print("Fehler bei Registrierung: \(error)")
                 self.showAlert(withTitle: "Registrieren Fehlgeschlagen", message: error.localizedDescription)
@@ -64,8 +66,10 @@ class LoginViewController: UIViewController {
         AuthService.shared.loginUser(email: email, password: password) { result in
             switch result {
             case .success(let user):
-                print("Anmeldung erfolgreich USER_ID: \(user.uid)")
+                let successMessage = "Anmeldung erfolgreich USER_ID: \(user.uid)"
+                print(successMessage)
                 print("DisplayName: \(user.displayName ?? "")")
+                //self.showAlert(withTitle: "Anmeldung erfolgreich!", message: successMessage)
                 
                 Task {
                     guard let currentUserModel = await self.getCurrentUser(user: user) else { return }
