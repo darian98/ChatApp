@@ -20,6 +20,7 @@
         let typingIndicatorLabel = UILabel()
         var messageInputContainerBottomConstraint: NSLayoutConstraint!
         var destroyingMessagesTimer = UIBarButtonItem()
+        var messagesDestroyingTimerInSeconds: Int?
         
         var messages: [ChatMessage] = []
         let currentUser: UserModel
@@ -55,7 +56,19 @@
             observeEncryptedMessages()
             observeTypingStatus2()
             AudioService.shared.configureAudioSession()
+            
+            
         }
+        
+        func setTimerColor() {
+            ChatService.shared.getChat(withID: chatID) { chat in
+                guard let chat = chat else { return }
+                if chat.deleteMessagesAfterSeconds > 0  {
+                    self.destroyingMessagesTimer.tintColor = .systemGreen
+                }
+            }
+        }
+        
         
          @objc func dismissKeyBoard() {
              view.endEditing(true)
@@ -65,9 +78,10 @@
             super.viewWillAppear(animated)
             NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
             NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
-            
+            setTimerColor()
+            fetchMessagesDestroyingTimerSeconds()
+    
             //ChatService.shared.deleteMessagesFromChat(chat: chat)
-            
         }
 
         override func viewWillDisappear(_ animated: Bool) {
@@ -79,6 +93,18 @@
 //                ChatService.shared.deleteChat(chatID: chatID)
 //            }
         }
+        
+        func fetchMessagesDestroyingTimerSeconds() {
+            Task {
+                ChatService.shared.getChat(withID: chatID) { chat in
+                    guard let chat = chat else { return }
+                        self.messagesDestroyingTimerInSeconds = chat.deleteMessagesAfterSeconds
+                        print("SecondsToDestroy: \(self.messagesDestroyingTimerInSeconds)")
+                }
+            }
+        }
+        
+        
         func setupUIWithStackView() {
                 view.backgroundColor = .systemBackground
                 // Container für TypingIndicator und TableView
@@ -114,7 +140,7 @@
            }
         
         func configureUIBarButtonItems() {
-            let deletingMessagesTimer   = UIBarButtonItem(title: "", image: UIImage(systemName: "timer"), target: self, action: #selector(deleteMessages))
+            let deletingMessagesTimer   = UIBarButtonItem(title: "", image: UIImage(systemName: "timer"), target: self, action: #selector(triggerDeleteMessagesTimerAlert))
             self.destroyingMessagesTimer = deletingMessagesTimer
             
             let addFriendButton         = UIBarButtonItem(title: "", image: UIImage(systemName: "person.fill.badge.plus"), target: self, action: #selector(addFriend))
@@ -129,20 +155,106 @@
             typingIndicatorLabel.textAlignment = .center
         }
         
-        @objc func deleteMessages() {
-            showDeleteMessagesTimerAlert(chatID: chatID) { updatedTimerState in
-                switch updatedTimerState {
-                case .failed:
-                    print("Failed to Update Timer")
-                case.inactive:
-                    print("Timer wurde deaktiviert")
-                    self.destroyingMessagesTimer.tintColor = .systemBlue
-                case .active:
-                    print("Timer wurde aktiviert!")
-                    self.destroyingMessagesTimer.tintColor = .systemGreen
+        @objc func triggerDeleteMessagesTimerAlert() {
+            print("After trigger seconds = \(self.messagesDestroyingTimerInSeconds)")
+            if let secondsToDestroy = self.messagesDestroyingTimerInSeconds {
+                print("In Trigger Method: SecondsToDestroy: \(secondsToDestroy)")
+                if secondsToDestroy > 0 {
+                    showActiveDeleteMessagesTimerAlert(seconds: secondsToDestroy, chatID: chatID) { updatedTimerState in
+                        switch updatedTimerState {
+                        case .inactive:
+                            print("Timer wurde deaktiviert")
+                            self.messagesDestroyingTimerInSeconds = 0
+                            self.destroyingMessagesTimer.tintColor = .systemBlue
+                            self.showAlert(withTitle: "Nachrichten zerstören deaktiviert!", message: "Der Timer zum Zerstören der Nachrichten wurde erfolgreich deaktiviert!")
+                        case .failed:
+                            print("Failed to Update Timer")
+                        case .active(seconds: let seconds):
+                            print("Timer wurde aktiviert!")
+                            self.destroyingMessagesTimer.tintColor = .systemGreen
+                            self.showAlert(withTitle: "Nachrichten zerstören aktiviert!", message: self.configureTimerMessage(seconds: seconds))
+                        }
+                    }
+                } else {
+                    showDeleteMessagesTimerAlert(chatID: chatID) { updatedTimerState in
+                        switch updatedTimerState {
+                        case .failed:
+                            print("Failed to Update Timer")
+                        case.inactive:
+                            print("Timer wurde deaktiviert")
+                            self.destroyingMessagesTimer.tintColor = .systemBlue
+                            self.showAlert(withTitle: "Nachrichten zerstören deaktiviert!", message: "Der Timer zum Zerstören der Nachrichten wurde erfolgreich deaktiviert!")
+                        case .active(seconds: let seconds):
+                            print("Timer wurde aktiviert!")
+                            self.messagesDestroyingTimerInSeconds = seconds
+                            self.destroyingMessagesTimer.tintColor = .systemGreen
+                            self.showAlert(withTitle: "Nachrichten zerstören aktiviert!", message: self.configureTimerMessage(seconds: seconds))
+                        }
+                    }
                 }
             }
         }
+        
+        
+        private func configureTimerMessage(seconds: Int) -> String {
+            var hours = 0
+            var minutes = 0
+            var seconds1 = 0
+            
+            minutes = seconds / 60       // Ganzzahldivision
+            seconds1 = seconds % 60
+            
+            var andMinutes = 0
+            var andSeconds = 0
+            
+            hours = minutes / 60
+            print("Stunden: ")
+            andMinutes = minutes % 60
+            andSeconds = seconds1
+            
+            let hourOrHours = "\(hours == 1 ? "Stunde" : "Stunden")"
+            let minuteOrMinutes = "\(andMinutes == 1 ? "Minute" : "Minuten")"
+            let secondOrSeconds = "\(andSeconds == 1 ? "Sekunde" : "Sekunden")"
+            
+            let hoursText = "\(hours > 0 ? "\(hours) \(hourOrHours)," : "")"
+            let minuteText = "\(minutes > 0 ? "\(String(andMinutes)) \(minuteOrMinutes)" : "")"
+            let andSecondsText =  "\(minutes > 0 ? "und \(seconds1) \(secondOrSeconds)" : "\(seconds1) \(secondOrSeconds)")"
+            
+            
+            let components = [hoursText, minuteText, andSecondsText].filter { !$0.isEmpty }
+            let combinedText = components.joined(separator: " ")
+            
+            let hoursMinutesAndSecondsText = "Der Timer wurde auf \(combinedText) gesetzt!"
+            
+            return hoursMinutesAndSecondsText
+        }
+        
+        
+        
+        private func rechneSekunden(seconds: Int) -> String {
+            var stunden = 0
+            var minuten1 = 0
+            var sekunden1 = 0
+            
+            minuten1 = seconds / 60       // Ganzzahldivision
+            sekunden1 = seconds % 60
+            
+            var undMinuten = 0
+            var undSekunden = 0
+            
+            stunden = minuten1 / 60
+            print("Stunden: ")
+            undMinuten = minuten1 % 60
+            undSekunden = sekunden1
+            
+            let hoursText = "\(stunden > 0 ? " \(stunden) Stunden," : "")"
+            let minuteText = "\(minuten1 > 0 ? "\(String(undMinuten)) Minuten" : "")"
+            let AndSecondsText =  " \(minuten1 > 0 ? "und \(sekunden1) Sekunden" : "\(sekunden1) Sekunden")"
+            let stundenMinutenUndSekundenText = "Der Timer wurde auf \(hoursText) \(minuteText) \(AndSecondsText) gesetzt!"
+            
+            return stundenMinutenUndSekundenText
+        }
+        
         
         @objc func startCall() {
             print("Start Call clicked!")

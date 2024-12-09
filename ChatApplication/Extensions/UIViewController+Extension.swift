@@ -10,7 +10,9 @@ import UIKit
 
 
 enum UpdatedTimerState {
-    case failed, active, inactive
+    case failed
+    case active(seconds: Int)
+    case inactive
 }
 
 extension UIViewController {
@@ -98,6 +100,31 @@ extension UIViewController {
         
     }
     
+    
+    func showActiveDeleteMessagesTimerAlert(seconds: Int, chatID: String, completion: @escaping (UpdatedTimerState) -> Void) {
+        let alertController = UIAlertController(title: "Selbstzerstörende Nachrichten aktiv", message: self.configureTimerMessage(seconds: seconds), preferredStyle: .alert)
+        
+        let deleteTimerAction = UIAlertAction(title: "Timer löschen", style: .destructive) { _ in
+            ChatService.shared.updateDeleteMessagesAfterSecondsForChat(chatID: chatID, seconds: 0) { success in
+                DispatchQueue.main.async {
+                    if success {
+                        print("Timer zum Löschen der Nachrichten erfolgreich auf 0 gesetzt!")
+                        completion(.inactive)
+                    } else {
+                        print("Fehler beim Löschen (auf 0 Setzen) des Timers!")
+                        completion(.failed)
+                    }
+                }
+            }
+        }
+        let cancelAction = UIAlertAction(title: "Abbrechen", style: .cancel, handler: nil)
+        
+        alertController.addAction(deleteTimerAction)
+        alertController.addAction(cancelAction)
+        
+        self.present(alertController, animated: true, completion: nil)
+    }
+    
     func showDeleteMessagesTimerAlert(chatID: String, completion: @escaping (UpdatedTimerState) -> Void) {
         let alertController = UIAlertController(title: "Selbstzerstörende Nachrichten", message: "Nach wie vielen Sekunden sollen die Nachrichten zerstört werden?", preferredStyle: .alert)
             // Füge ein Textfeld für die Eingabe hinzu
@@ -108,7 +135,6 @@ extension UIViewController {
             // Füge den "Abbrechen"-Button hinzu
             let cancelAction = UIAlertAction(title: "Abbrechen", style: .cancel, handler: nil)
             
-            // Füge den "OK"-Button hinzu, um die Eingabe zu verarbeiten
             let okAction = UIAlertAction(title: "Timer setzen", style: .default) { [weak alertController] _ in
                 guard let textField = alertController?.textFields?.first,
                       let secondsText = textField.text,
@@ -116,13 +142,14 @@ extension UIViewController {
                           print("Ungültige Eingabe")
                           return
                 }
+                
                 // Deine Logik zum Löschen der Nachrichten nach der angegebenen Zeit
                 ChatService.shared.deleteMessagesAfterSeconds(chatID: chatID, delayInSeconds: seconds)
                 ChatService.shared.updateDeleteMessagesAfterSecondsForChat(chatID: chatID, seconds: seconds) { success in
                     DispatchQueue.main.async {
                         if success {
                             print("Timer zum Löschen der Nachrichten erfolgreich geupdated!")
-                            completion(.active)
+                            completion(.active(seconds: seconds))
                         } else {
                             print("Fehler beim Updaten des Timers!")
                             completion(.failed)
@@ -148,7 +175,7 @@ extension UIViewController {
         
             // Füge die Aktionen hinzu
             alertController.addAction(okAction)
-            alertController.addAction(deleteTimerAction)
+            //alertController.addAction(deleteTimerAction)
             alertController.addAction(cancelAction)
             // Zeige den AlertController an
             self.present(alertController, animated: true, completion: nil)
@@ -160,6 +187,39 @@ extension UIViewController {
         tapGestureRecognizer.cancelsTouchesInView = false
         tapGestureRecognizer.delegate = delegate
         view.addGestureRecognizer(tapGestureRecognizer)
+    }
+    
+    private func configureTimerMessage(seconds: Int) -> String {
+        var hours = 0
+        var minutes = 0
+        var seconds1 = 0
+        
+        minutes = seconds / 60       // Ganzzahldivision
+        seconds1 = seconds % 60
+        
+        var andMinutes = 0
+        var andSeconds = 0
+        
+        hours = minutes / 60
+        print("Stunden: ")
+        andMinutes = minutes % 60
+        andSeconds = seconds1
+        
+        let hourOrHours = "\(hours == 1 ? "Stunde" : "Stunden")"
+        let minuteOrMinutes = "\(andMinutes == 1 ? "Minute" : "Minuten")"
+        let secondOrSeconds = "\(andSeconds == 1 ? "Sekunde" : "Sekunden")"
+        
+        let hoursText = "\(hours > 0 ? "\(hours) \(hourOrHours)," : "")"
+        let minuteText = "\(minutes > 0 ? "\(String(andMinutes)) \(minuteOrMinutes)" : "")"
+        let andSecondsText =  "\(minutes > 0 ? "und \(seconds1) \(secondOrSeconds)" : "\(seconds1) \(secondOrSeconds)")"
+        
+        
+        let components = [hoursText, minuteText, andSecondsText].filter { !$0.isEmpty }
+        let combinedText = components.joined(separator: " ")
+        
+        let hoursMinutesAndSecondsText = "Der Timer wurde auf \(combinedText) gesetzt!"
+        
+        return hoursMinutesAndSecondsText
     }
     
 }
