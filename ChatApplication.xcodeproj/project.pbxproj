@@ -43,7 +43,7 @@
 		0B71EBF42CF235A10072AF59 /* AudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B71EBF32CF235A10072AF59 /* AudioService.swift */; };
 		0B71EBF62CF235B50072AF59 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 0B71EBF52CF235B50072AF59 /* FirebaseStorage */; };
 		0B71EBF82CF4AC640072AF59 /* ConfigureGroupChatVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B71EBF72CF4AC640072AF59 /* ConfigureGroupChatVC.swift */; };
-		0B71EBFB2CF4BDF40072AF59 /* ChatViewController2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B71EBFA2CF4BDF40072AF59 /* ChatViewController2.swift */; };
+		0B71EBFB2CF4BDF40072AF59 /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B71EBFA2CF4BDF40072AF59 /* ChatViewController.swift */; };
 		0B71EBFD2CF68AE60072AF59 /* ChatListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B71EBFC2CF68AE60072AF59 /* ChatListCell.swift */; };
 /* End PBXBuildFile section */
 
@@ -81,7 +81,7 @@
 		0B26815C2CFF7179000E6870 /* UserSearchListCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSearchListCell.swift; sourceTree = "<group>"; };
 		0B71EBF32CF235A10072AF59 /* AudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioService.swift; sourceTree = "<group>"; };
 		0B71EBF72CF4AC640072AF59 /* ConfigureGroupChatVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigureGroupChatVC.swift; sourceTree = "<group>"; };
-		0B71EBFA2CF4BDF40072AF59 /* ChatViewController2.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController2.swift; sourceTree = "<group>"; };
+		0B71EBFA2CF4BDF40072AF59 /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
 		0B71EBFC2CF68AE60072AF59 /* ChatListCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListCell.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -225,6 +225,7 @@
 		0B1A49152CED6F6E0062BDF5 /* Chat */ = {
 			isa = PBXGroup;
 			children = (
+				0B71EBFA2CF4BDF40072AF59 /* ChatViewController.swift */,
 				0B26815E2CFFD557000E6870 /* ChatList */,
 				0B2681522CFD3407000E6870 /* IncomingCall */,
 				0B71EBF92CF4BDDF0072AF59 /* GroupChat */,
@@ -305,7 +306,6 @@
 			isa = PBXGroup;
 			children = (
 				0B71EBF72CF4AC640072AF59 /* ConfigureGroupChatVC.swift */,
-				0B71EBFA2CF4BDF40072AF59 /* ChatViewController2.swift */,
 			);
 			path = GroupChat;
 			sourceTree = "<group>";
@@ -415,7 +415,7 @@
 				0B11FA862CEB8EBB00FE0004 /* SceneDelegate.swift in Sources */,
 				0B11FAAC2CEB8FB500FE0004 /* Friend.swift in Sources */,
 				0B1A49132CECF6430062BDF5 /* IncomingCallViewController.swift in Sources */,
-				0B71EBFB2CF4BDF40072AF59 /* ChatViewController2.swift in Sources */,
+				0B71EBFB2CF4BDF40072AF59 /* ChatViewController.swift in Sources */,
 				0B11FAAD2CEB8FB500FE0004 /* FriendRequest.swift in Sources */,
 				0B26815D2CFF7179000E6870 /* UserSearchListCell.swift in Sources */,
 				0B11FACB2CECEF0600FE0004 /* VideoCallService.swift in Sources */,

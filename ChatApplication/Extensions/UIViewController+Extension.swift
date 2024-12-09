@@ -87,7 +87,7 @@ extension UIViewController {
             Task {
                 guard let currentUser = try await UserService.shared.fetchUser(byID: userID) else { return}
                 guard let friendUser = try await UserService.shared.fetchUser(byID: friendID) else { return }
-                ChatService.shared.startChat2(currentUser: currentUser, with: [friendUser], viewController: viewController)
+                ChatService.shared.startChat(currentUser: currentUser, with: [friendUser], viewController: viewController)
             }
         }
         let cancelButton        = UIAlertAction(title: "Abbrechen", style: .cancel, handler: nil)

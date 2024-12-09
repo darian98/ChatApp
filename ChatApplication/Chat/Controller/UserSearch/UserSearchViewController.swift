@@ -78,7 +78,7 @@
         
         // Funktion zum Starten eines Chats
         private func startChat(with user: UserModel) {
-            ChatService.shared.startChat2(currentUser: currentUser, with: [user], viewController: self)
+            ChatService.shared.startChat(currentUser: currentUser, with: [user], viewController: self)
             print("Chat starten mit Benutzer: \(user.displayName)")
 
         }

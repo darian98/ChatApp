@@ -135,7 +135,7 @@ class ConfigureGroupChatVC: UIViewController {
     
     // Funktion zum Starten eines Chats
     private func startChat2(with users: [UserModel]) {
-        ChatService.shared.startChat2(currentUser: currentUser, with: users, viewController: self)
+        ChatService.shared.startChat(currentUser: currentUser, with: users, viewController: self)
         print("\(currentUser.displayName) startet Chat mit folgenden Benutzern: ")
         for user in users {
             print("\(user.displayName)")

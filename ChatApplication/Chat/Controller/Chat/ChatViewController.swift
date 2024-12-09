@@ -10,7 +10,7 @@
     import FirebaseAuth
     import CryptoKit
 
-    class ChatViewController2: UIViewController {
+    class ChatViewController: UIViewController {
         // UI-Elemente
         let tableView = UITableView()
         let messageInputContainer = UIView()
@@ -28,7 +28,6 @@
         let chatID: String
         var isRecording: Bool = false
         private var chatKey: SymmetricKey {
-            //return ChatService.shared.generateChatKey(from: chatID)
             return loadOrCreateChatKey()
         }
         
@@ -50,14 +49,9 @@
             addTapGestureRecognizerToView(action: #selector(dismissKeyBoard), delegate: self)
             setupUIWithStackView()
             configureUIBarButtonItems()
-            //navigationItem.title = "\(userToChatWith.displayName)"
-            
-            //observeMessages()
             observeEncryptedMessages()
             observeTypingStatus2()
             AudioService.shared.configureAudioSession()
-            
-            
         }
         
         func setTimerColor() {
@@ -69,7 +63,6 @@
             }
         }
         
-        
          @objc func dismissKeyBoard() {
              view.endEditing(true)
         }
@@ -80,18 +73,12 @@
             NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
             setTimerColor()
             fetchMessagesDestroyingTimerSeconds()
-    
-            //ChatService.shared.deleteMessagesFromChat(chat: chat)
         }
 
         override func viewWillDisappear(_ animated: Bool) {
             super.viewWillDisappear(animated)
             NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
             NotificationCenter.default.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
-            
-//            if messages.isEmpty {
-//                ChatService.shared.deleteChat(chatID: chatID)
-//            }
         }
         
         func fetchMessagesDestroyingTimerSeconds() {
@@ -403,7 +390,7 @@
             let otherUserIDS = getOtherUsersIDs()
             
             //MARK: Erinnerung, currentUser mit userToChatWith
-            ChatService.shared.observeOtherUsersTyping2(chatID: chatID, otherUserIDs: otherUserIDS) { typingUsers in
+            ChatService.shared.observeOtherUsersTyping(chatID: chatID, otherUserIDs: otherUserIDS) { typingUsers in
                 UIView.animate(withDuration: 0.3, delay: 0, options: [.curveEaseInOut]) {
                     if typingUsers.isEmpty {
                         self.typingIndicatorLabel.isHidden = true
@@ -465,15 +452,12 @@
               }
           }
         
-       
         @objc private func sendMessage() {
             let otherUserIDS = getOtherUsersIDs()
             guard let messageText = messageTextField.text, !messageText.isEmpty else { return }
             
-            //ChatService.shared.sendMessage2(chatID: chatID, message: messageText, receiverIDs: otherUserIDS, senderID: currentUser.uid, displayName: currentUser.displayName)
-            
             Task {
-                ChatService.shared.sendMessage3(chatID: chatID, message: messageText, receiverIDs: otherUserIDS, senderID: currentUser.uid, displayName: currentUser.displayName, key: chatKey)
+                ChatService.shared.sendEncryptedMessage(chatID: chatID, message: messageText, receiverIDs: otherUserIDS, senderID: currentUser.uid, displayName: currentUser.displayName, key: chatKey)
                 ChatService.shared.getChat(withID: chatID) { chat in
                     if let chat = chat {
                         print("chat in viewWillAppear vom ChatViewController2 geladen: \(chat.chatID)")
@@ -485,7 +469,6 @@
                     }
                 }
             }
-            
             messageTextField.text = ""
         }
         
@@ -506,26 +489,6 @@
                    }
                }
            }
-        
-        // Nachrichten-Listener
-           private func observeMessages() {
-               ChatService.shared.observeMessages2(chatID: chatID) { [weak self] newMessages in
-                   guard let self = self else { return }
-                   // Nachrichten im Array aktualisieren und Tabelle neu laden
-                   DispatchQueue.main.async {
-                       self.messages = newMessages
-                       print("Messages-Count :\(self.messages.count)")
-                       self.tableView.reloadData()
-                       
-                       // Zum neuesten Nachricht scrollen
-                       if self.messages.count > 0 {
-                           let indexPath = IndexPath(row: self.messages.count - 1, section: 0)
-                           self.tableView.scrollToRow(at: indexPath, at: .bottom, animated: true)
-                       }
-                   }
-               }
-           }
-        
         private func deleteMessage(at indexPath: IndexPath) {
             
             let message = messages[indexPath.row]
@@ -593,7 +556,7 @@
             }
         }
     }
-    extension ChatViewController2: UITableViewDataSource, UITableViewDelegate {
+    extension ChatViewController: UITableViewDataSource, UITableViewDelegate {
         func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
             let message = messages[indexPath.row]
             if message.isAudio {
@@ -646,7 +609,7 @@
             }
     }
 
-    extension ChatViewController2: UITextFieldDelegate {
+    extension ChatViewController: UITextFieldDelegate {
         func textFieldDidBeginEditing(_ textField: UITextField) {
             print("User is typing...")
             let currentUserID = currentUser.uid
@@ -661,7 +624,7 @@
     }
 
 // MARK: - UIGestureRecognizerDelegate
-extension ChatViewController2: UIGestureRecognizerDelegate {
+extension ChatViewController: UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
         // Prüfen, ob die berührte View der sendButton ist (oder eine andere View, die den Tap ignorieren soll)
         if let touchedView = touch.view, touchedView == sendButton {

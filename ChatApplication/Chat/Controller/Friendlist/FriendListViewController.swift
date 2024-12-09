@@ -207,7 +207,7 @@ extension FriendListViewController: ConfigureGroupChatDelegate {
         if users.isEmpty {
             print("Keine Benutzer für den Gruppenchat ausgewählt")
         } else {
-            ChatService.shared.startChat2(currentUser: configureGroupChatVC.currentUser, with: users, viewController: self)
+            ChatService.shared.startChat(currentUser: configureGroupChatVC.currentUser, with: users, viewController: self)
         }
     }
 }

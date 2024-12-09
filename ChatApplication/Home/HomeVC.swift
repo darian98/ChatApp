@@ -84,7 +84,7 @@ class HomeVC: UITabBarController {
         guard let currentUserID = Auth.auth().currentUser?.uid else { return }
         print("currentuserid: \(currentUserID)")
         
-        ChatService.shared.observeChatsForUser2(withID: currentUserID) { chats in
+        ChatService.shared.observeChatsForUser(withID: currentUserID) { chats in
             self.chats = chats
             print(chats.count)
         }

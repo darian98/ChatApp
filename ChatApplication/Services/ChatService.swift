@@ -18,7 +18,7 @@ class ChatService {
     private let db = Firestore.firestore()
     
 
-    func sendMessage3(chatID: String, message: String, receiverIDs: [String] ,senderID: String, displayName: String, key: SymmetricKey) {
+    func sendEncryptedMessage(chatID: String, message: String, receiverIDs: [String] ,senderID: String, displayName: String, key: SymmetricKey) {
         let randomID = UUID().uuidString
         
         guard let encryptedMessage = encryptMessage(message: message, key: key) else {
@@ -61,7 +61,7 @@ class ChatService {
         }
     }
     
-    func startChat2(currentUser: UserModel, with users: [UserModel], viewController: UIViewController) {
+    func startChat(currentUser: UserModel, with users: [UserModel], viewController: UIViewController) {
         var userIDs = [String]()
         let currentUserID = Auth.auth().currentUser?.uid ?? ""
         userIDs.append(currentUserID)
@@ -81,7 +81,7 @@ class ChatService {
         db.collection("chats").document(chatID).getDocument { document, error in
             if let document = document, document.exists {
                 // Chat existiert bereits, öffne den Chat
-                self.openChat2(currentUser: currentUser, usersToChatWith: users, chatID: chatID, viewController: viewController)
+                self.openChat(currentUser: currentUser, usersToChatWith: users, chatID: chatID, viewController: viewController)
             } else {
                 // Neuer Chat erstellen
                 let chatData: [String: Any] = [
@@ -97,7 +97,7 @@ class ChatService {
                         print("Fehler beim Erstellen des Chats: \(error)")
                     } else {
                         print("Neuer Chat erstellt mit ChatID: \(chatID)")
-                        self.openChat2(currentUser: currentUser, usersToChatWith: users, chatID: chatID, viewController: viewController)
+                        self.openChat(currentUser: currentUser, usersToChatWith: users, chatID: chatID, viewController: viewController)
                     }
                 }
             }
@@ -110,10 +110,10 @@ class ChatService {
         return sortedIDs.joined(separator: "_")
     }
     
-    func openChat2(currentUser: UserModel, usersToChatWith: [UserModel], chatID: String, viewController: UIViewController) {
+    func openChat(currentUser: UserModel, usersToChatWith: [UserModel], chatID: String, viewController: UIViewController) {
         print("Öffne Chat mit ID: \(chatID)")
         
-        let chatVC = ChatViewController2(currentUser: currentUser, usersToChatWith: usersToChatWith, chatID: chatID)
+        let chatVC = ChatViewController(currentUser: currentUser, usersToChatWith: usersToChatWith, chatID: chatID)
         if let navigationController = viewController.navigationController {
                 navigationController.pushViewController(chatVC, animated: true)
                 updateMessageRead(chatID: chatID, currentUserID: currentUser.uid)
@@ -148,7 +148,7 @@ class ChatService {
                 }
             }
     }
-    func observeOtherUsersTyping2(chatID: String, otherUserIDs: [String], completion: @escaping ([String]) -> Void) {
+    func observeOtherUsersTyping(chatID: String, otherUserIDs: [String], completion: @escaping ([String]) -> Void) {
         let docRef = db.collection("chats").document(chatID)
         
         // Firestore Snapshot Listener hinzufügen
@@ -239,37 +239,6 @@ class ChatService {
                 
             }
     }
-    
-    // Nachrichten-Listener
-    func observeMessages2(chatID: String, completion: @escaping ([ChatMessage]) -> Void) {
-        db.collection("chats").document(chatID).collection("messages")
-            .order(by: "timestamp")
-            .addSnapshotListener { snapshot, error in
-                guard let documents = snapshot?.documents else { return }
-                let messages = documents.compactMap { doc -> ChatMessage? in
-                    let data = doc.data()
-                    guard let message = data["message"] as? String,
-                          let messageID = data["messageID"] as? String,
-                          let displayName = data["displayName"] as? String,
-                          let senderID = data["senderID"] as? String,
-                          let receiverReadMessage = data["receiverReadMessage"] as? Bool,
-                          let timestamp = data["timestamp"] as? Timestamp,
-                          let isAudio = data["isAudio"] as? Bool
-                    else {
-                        return nil
-                    }
-
-                    // Dynamisch prüfen, ob es ein Gruppenchat oder Einzelchat ist
-                    let receiverID = data["receiverID"] as? String
-                    let receiverIDs = data["receiverIDs"] as? [String]
-                    
-                    return ChatMessage(messageID: messageID, displayName: displayName, message: message, senderID: senderID, receiverID: receiverID, receiverIDs: receiverIDs, receiverReadMessage: receiverReadMessage, timestamp: timestamp.dateValue(), isAudio: isAudio)
-                }
-                completion(messages)
-                
-            }
-    }
-    
     func deleteMessage(chatID: String, messageID: String, completion: @escaping (Result<Void, Error>) -> Void) {
            let messageRef = Firestore.firestore().collection("chats").document(chatID).collection("messages").document(messageID)
            
@@ -425,7 +394,7 @@ class ChatService {
         }
     }
     
-    func observeChatsForUser2(withID userID: String, completion: @escaping ([Chat]) -> Void) {
+    func observeChatsForUser(withID userID: String, completion: @escaping ([Chat]) -> Void) {
         db.collection("chats")
             .whereField("participants", arrayContains: userID) // Filtert Chats, in denen der Benutzer beteiligt ist
             .addSnapshotListener { snapshot, error in

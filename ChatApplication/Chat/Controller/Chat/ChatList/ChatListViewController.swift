@@ -55,17 +55,8 @@ class ChatListViewController: UIViewController {
         guard let currentUserID = Auth.auth().currentUser?.uid else { return }
         print("currentuserid: \(currentUserID)")
         print("observeChats wird ausgeführt...")
-        
-//        ChatService.shared.observeChatsForUser3(withID: currentUserID, getKeyForChat: getKeyForChat) { chats in
-//            print("observechats completion...")
-//            DispatchQueue.main.async {
-//                self.chats = chats
-//                self.tableView.reloadData()
-//                print("Chats-Count: \(chats.count)")
-//            }
-//        }
-        
-        ChatService.shared.observeChatsForUser2(withID: currentUserID) { chats in
+                
+        ChatService.shared.observeChatsForUser(withID: currentUserID) { chats in
             print("observechats completion...")
             DispatchQueue.main.async {
                 self.chats = chats
@@ -75,7 +66,7 @@ class ChatListViewController: UIViewController {
         }
     }
 
-    func navigateToChat2(chat: Chat) {
+    func navigateToChat(chat: Chat) {
         guard let currentUser = Auth.auth().currentUser else { return }
         Task {
             guard let currentUserModel = try await UserService.shared.fetchUser(byID: currentUser.uid) else { return }
@@ -88,8 +79,7 @@ class ChatListViewController: UIViewController {
                 guard let userToChatWith = try await UserService.shared.fetchUser(byID: userID) else { return }
                 chatParticipiants.append(userToChatWith)
             }
-            ChatService.shared.startChat2(currentUser: currentUserModel, with: chatParticipiants, viewController: self)
-//            ChatService.shared.openChat2(currentUser: currentUserModel, userToChatWith: chatParticipiants, chatID: chat.chatID, viewController: self)
+            ChatService.shared.startChat(currentUser: currentUserModel, with: chatParticipiants, viewController: self)
         }
     }
 }
@@ -108,10 +98,7 @@ extension ChatListViewController: UITableViewDataSource, UITableViewDelegate {
         
         Task {
             await cell.configure(with: chat)
-//            guard let lastMessageUser = try await UserService.shared.fetchUser(byID: chat.lastMessage.senderID) else { return }
-//            cell.textLabel?.text = "\(lastMessageUser.displayName): \(chat.lastMessage.message)"
         }
-        // cell.textLabel?.text = "\(chat.lastMessage.message)"
         return cell
     }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -122,8 +109,7 @@ extension ChatListViewController: UITableViewDataSource, UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let chat = chats[indexPath.row]
         //for messages in chat
-        navigateToChat2(chat: chat)
-        //openChat(chatID: chat.chatID)
+        navigateToChat(chat: chat)
     }
     
 }
