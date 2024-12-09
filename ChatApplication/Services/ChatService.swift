@@ -472,69 +472,7 @@ class ChatService {
                 completion(chats)
             }
     }
-    
-//    func observeChatsForUser3(withID userID: String, getKeyForChat: @escaping (String) -> SymmetricKey?,  completion: @escaping ([Chat]) -> Void) {
-//        db.collection("chats")
-//            .whereField("participants", arrayContains: userID) // Filtert Chats, in denen der Benutzer beteiligt ist
-//            .addSnapshotListener { snapshot, error in
-//                if let error = error {
-//                    print("Fehler beim Abrufen der Chats: \(error)")
-//                    return
-//                }
-//                
-//                guard let documents = snapshot?.documents else {
-//                    print("Keine Dokumente gefunden")
-//                    return
-//                }
-//                
-//                print("DocumentCount in Chats: \(documents.count)")
-//                
-//                var chats: [Chat] = []
-//                
-//                for document in documents {
-//                    let data = document.data()
-//                    guard let chatID = data["chatID"] as? String,
-//                          let lastMessageData = data["lastMessage"] as? [String: Any], // Hole das Dictionary
-//                          let lastMessage = LastMessage(from: lastMessageData), // Erstelle ein LastMessage-Objekt
-//                          let participantsIDs = data["participants"] as? [String],
-//                          let isTyping = data["isTyping"] as? [String],
-//                          let timestamp = data["timestamp"] as? Timestamp,
-//                          let key = getKeyForChat(chatID) else {
-//                          print("Fehler beim Verarbeiten eines Dokuments")
-//                        // Lösche das fehlerhafte Dokument
-//                        continue
-//                    }
-//                    if let encryptedSenderID = lastMessageData["senderID"] as? String,
-//                    let encryptedMessage = lastMessageData["message"] as? String,
-//                    let encryptedMessageData = Data(base64Encoded: encryptedMessage) {
-//                        if let decryptedSenderID = self.decryptMessage(encryptedData: encryptedSenderID.data(using: .utf8)!, key: key),
-//                           let decryptedMessage  = self.decryptMessage(encryptedData: encryptedMessageData, key: key) {
-//                            // Erstelle das LastMessage-Objekt mit entschlüsselten Werten
-//                            let lastMessageDataDecrypted: [String: Any] = [
-//                            "senderID": decryptedSenderID,
-//                            "message": decryptedMessage
-//                            ]
-//                            
-//                            if let lastMessage = LastMessage(from: lastMessageDataDecrypted) {
-//                                let chat = Chat(
-//                                    chatID: chatID,
-//                                    lastMessage: lastMessage,
-//                                    participantIDs: participantsIDs,
-//                                    isTyping: isTyping,
-//                                    timestamp: timestamp.dateValue(),
-//                                    messages: []
-//                                )
-//                                chats.append(chat)
-//                            } else {
-//                                print("Fehler beim erstellen der LastMessage aus den entschlüsselten Daten!")
-//                            }
-//                        }
-//                    }
-//                }
-//                completion(chats)
-//            }
-//    }
-    
+        
     func encryptMessage(message: String, key: SymmetricKey) -> Data? {
         let data = message.data(using: .utf8)!
         do {
