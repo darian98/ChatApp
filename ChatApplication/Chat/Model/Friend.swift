@@ -7,7 +7,8 @@
 
 import Foundation
 
-struct Friend {
+struct Friend: Identifiable {
+    var id: String { friendID }
     var friendID: String
     var timestamp: Date
 }

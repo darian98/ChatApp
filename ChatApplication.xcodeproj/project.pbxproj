@@ -45,6 +45,8 @@
 		0B71EBF82CF4AC640072AF59 /* ConfigureGroupChatVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B71EBF72CF4AC640072AF59 /* ConfigureGroupChatVC.swift */; };
 		0B71EBFB2CF4BDF40072AF59 /* ChatViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B71EBFA2CF4BDF40072AF59 /* ChatViewController.swift */; };
 		0B71EBFD2CF68AE60072AF59 /* ChatListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B71EBFC2CF68AE60072AF59 /* ChatListCell.swift */; };
+		0BEB22382D0864C1001E026A /* UserProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BEB22372D0864C1001E026A /* UserProfileView.swift */; };
+		0BEB223C2D086F9F001E026A /* UserProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0BEB223B2D086F9F001E026A /* UserProfileViewModel.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -83,6 +85,8 @@
 		0B71EBF72CF4AC640072AF59 /* ConfigureGroupChatVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigureGroupChatVC.swift; sourceTree = "<group>"; };
 		0B71EBFA2CF4BDF40072AF59 /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
 		0B71EBFC2CF68AE60072AF59 /* ChatListCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatListCell.swift; sourceTree = "<group>"; };
+		0BEB22372D0864C1001E026A /* UserProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileView.swift; sourceTree = "<group>"; };
+		0BEB223B2D086F9F001E026A /* UserProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserProfileViewModel.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -271,9 +275,9 @@
 		0B2681512CFC9E2B000E6870 /* Profile */ = {
 			isa = PBXGroup;
 			children = (
-				0B2681532CFDCB68000E6870 /* ProfileView.swift */,
+				0BEB223A2D086566001E026A /* OwnProfile */,
+				0BEB22392D08655C001E026A /* UserProfile */,
 				0B2681552CFDD210000E6870 /* ImagePicker.swift */,
-				0B2681572CFDE3DD000E6870 /* ProfileViewModel.swift */,
 			);
 			path = Profile;
 			sourceTree = "<group>";
@@ -308,6 +312,24 @@
 				0B71EBF72CF4AC640072AF59 /* ConfigureGroupChatVC.swift */,
 			);
 			path = GroupChat;
+			sourceTree = "<group>";
+		};
+		0BEB22392D08655C001E026A /* UserProfile */ = {
+			isa = PBXGroup;
+			children = (
+				0BEB22372D0864C1001E026A /* UserProfileView.swift */,
+				0BEB223B2D086F9F001E026A /* UserProfileViewModel.swift */,
+			);
+			path = UserProfile;
+			sourceTree = "<group>";
+		};
+		0BEB223A2D086566001E026A /* OwnProfile */ = {
+			isa = PBXGroup;
+			children = (
+				0B2681572CFDE3DD000E6870 /* ProfileViewModel.swift */,
+				0B2681532CFDCB68000E6870 /* ProfileView.swift */,
+			);
+			path = OwnProfile;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -396,6 +418,7 @@
 				0B11FA842CEB8EBB00FE0004 /* AppDelegate.swift in Sources */,
 				0B11FAB22CEB8FBB00FE0004 /* UIViewController+Extension.swift in Sources */,
 				0B11FAAB2CEB8FB500FE0004 /* Chat.swift in Sources */,
+				0BEB223C2D086F9F001E026A /* UserProfileViewModel.swift in Sources */,
 				0B11FABA2CEB8FC500FE0004 /* FriendService.swift in Sources */,
 				0B1A491C2CEE31010062BDF5 /* CallListVC.swift in Sources */,
 				0B71EBF42CF235A10072AF59 /* AudioService.swift in Sources */,
@@ -418,6 +441,7 @@
 				0B71EBFB2CF4BDF40072AF59 /* ChatViewController.swift in Sources */,
 				0B11FAAD2CEB8FB500FE0004 /* FriendRequest.swift in Sources */,
 				0B26815D2CFF7179000E6870 /* UserSearchListCell.swift in Sources */,
+				0BEB22382D0864C1001E026A /* UserProfileView.swift in Sources */,
 				0B11FACB2CECEF0600FE0004 /* VideoCallService.swift in Sources */,
 				0B2681562CFDD210000E6870 /* ImagePicker.swift in Sources */,
 				0B11FAB82CEB8FC500FE0004 /* AuthService.swift in Sources */,

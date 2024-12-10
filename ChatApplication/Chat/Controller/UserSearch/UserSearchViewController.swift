@@ -9,6 +9,7 @@
     import UIKit
     import FirebaseFirestore
     import FirebaseAuth
+    import SwiftUI
 
     class UserSearchViewController: UIViewController {
         private let searchBar = UISearchBar()
@@ -83,6 +84,14 @@
 
         }
         
+        private func showUserProfile(with user: UserModel) {
+            let userProfileViewModel = UserProfileViewModel(user: user)
+            let userprofileView = UserProfileView(viewModel: userProfileViewModel)
+            let userProfileViewHostingController = UIHostingController(rootView: userprofileView)
+            present(userProfileViewHostingController, animated: true)
+        }
+        
+        
         private func filterUsers(for searchText: String) {
             if searchText.isEmpty {
                 filteredUsers = []
@@ -120,7 +129,14 @@ extension UserSearchViewController:  UITableViewDataSource, UITableViewDelegate 
     // UITableViewDelegate - Aktion bei Auswahl eines Benutzers
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let selectedUser = filteredUsers[indexPath.row]
-        startChat(with: selectedUser)
+        
+        self.presentAlertWithActions(title: "", message: "Wählen Sie eine Aktion", action1Title: "Nachricht an \(selectedUser.displayName) schreiben", action1Handler: {
+            self.startChat(with: selectedUser)
+        }, action2Title: "Profil von \(selectedUser.displayName) anzeigen") {
+            self.showUserProfile(with: selectedUser)
+        }
+        
+        //startChat(with: selectedUser)
     }
 }
 

@@ -181,6 +181,29 @@ extension UIViewController {
             self.present(alertController, animated: true, completion: nil)
     }
     
+    func presentAlertWithActions(
+            title: String?,
+            message: String?,
+            action1Title: String,
+            action1Handler: @escaping () -> Void,
+            action2Title: String,
+            action2Handler: @escaping () -> Void
+        ) {
+            let alert = UIAlertController(title: title, message: message, preferredStyle: .actionSheet)
+            
+            let action1 = UIAlertAction(title: action1Title, style: .default) { _ in
+                action1Handler()
+            }
+            let action2 = UIAlertAction(title: action2Title, style: .default) { _ in
+                action2Handler()
+            }
+            
+            alert.addAction(action1)
+            alert.addAction(action2)
+            
+            self.present(alert, animated: true, completion: nil)
+        }
+    
     
     func addTapGestureRecognizerToView(action: Selector, delegate: UIGestureRecognizerDelegate? = nil) {
         let tapGestureRecognizer = UITapGestureRecognizer(target: self, action: action)
