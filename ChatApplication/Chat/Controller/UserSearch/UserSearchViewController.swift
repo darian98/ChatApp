@@ -43,7 +43,11 @@
         }
         
         @objc private func dismissKeyboard() {
-            searchBar.endEditing(true) // Tastatur ausblenden
+                if let presentedVC = self.presentedViewController, presentedVC is UIAlertController {
+                    presentedVC.dismiss(animated: true, completion: nil)
+                    return
+                }
+                searchBar.endEditing(true) // Tastatur ausblenden
         }
         
         private func setupSearchBar() {
@@ -130,13 +134,11 @@ extension UserSearchViewController:  UITableViewDataSource, UITableViewDelegate 
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         let selectedUser = filteredUsers[indexPath.row]
         
-        self.presentAlertWithActions(title: "", message: "Wählen Sie eine Aktion", action1Title: "Nachricht an \(selectedUser.displayName) schreiben", action1Handler: {
+        self.presentAlertWithActions(title: "Aktion auswählen", message: "Wählen Sie die Aktion, die Sie ausführen wollen", action1Title: "Nachricht an \(selectedUser.displayName)", action1Handler: {
             self.startChat(with: selectedUser)
         }, action2Title: "Profil von \(selectedUser.displayName) anzeigen") {
             self.showUserProfile(with: selectedUser)
         }
-        
-        //startChat(with: selectedUser)
     }
 }
 

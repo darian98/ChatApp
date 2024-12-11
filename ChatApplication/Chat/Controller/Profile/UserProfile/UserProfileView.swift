@@ -66,9 +66,12 @@ extension UserProfileView {
                     Circle()
                         .fill(Color.gray.opacity(0.2))
                         .frame(width: 200, height: 200)
-                    Text("Wählen Sie\n ein Profilbild")
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.gray)
+                    Image(systemName: "person.circle") // "fill"-Variante für besseren Effekt
+                        .resizable()
+                        .scaledToFill() // Füllt den gesamten Kreis
+                        .frame(width: 120, height: 120) // Gleiche Größe wie der Kreis
+                        .clipShape(Circle()) // Schneidet das Bild auf Kreisform zu
+                        .foregroundColor(.gray.opacity(0.6)) // Passt die Farbe an
                 }
             }
         }

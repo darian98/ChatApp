@@ -198,8 +198,11 @@ extension UIViewController {
                 action2Handler()
             }
             
+            let cancelAction = UIAlertAction(title: "Abbrechen", style: .cancel, handler: nil)
+            
             alert.addAction(action1)
             alert.addAction(action2)
+            alert.addAction(cancelAction)
             
             self.present(alert, animated: true, completion: nil)
         }

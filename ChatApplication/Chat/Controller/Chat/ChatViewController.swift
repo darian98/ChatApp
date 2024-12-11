@@ -64,6 +64,10 @@
         }
         
          @objc func dismissKeyBoard() {
+             if let presentedVC = self.presentedViewController, presentedVC is UIAlertController {
+                 presentedVC.dismiss(animated: true, completion: nil)
+                 return
+             }
              view.endEditing(true)
         }
         
