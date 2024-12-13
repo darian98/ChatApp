@@ -14,10 +14,12 @@ class HomeVC: UITabBarController {
     var chats: [Chat] = []
     var friendRequestsForCurrentUser: [FriendRequest] = []
     var profileViewModel: ProfileViewModel
+    var postsViewModel: PostsViewModel
     
     init(currentUser: UserModel) {
         self.currentUser = currentUser
         self.profileViewModel = ProfileViewModel(currentUser: currentUser)
+        self.postsViewModel = PostsViewModel()
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -35,18 +37,20 @@ class HomeVC: UITabBarController {
     }
     
     func configureTabBarViewControllers() {
+        
+        let postsView = PostsView(viewModel: postsViewModel, currentUser: currentUser)
+        let postsViewHostingController = UIHostingController(rootView: postsView)
+        let navPostsViewHostingController = UINavigationController(rootViewController: postsViewHostingController)
+        navPostsViewHostingController.tabBarItem = UITabBarItem(title: "Posts", image: UIImage(systemName: "house"), tag: 0)
+        
         let userSearchVC = UserSearchViewController(currentUser: currentUser)
         let navUserSearchVC = UINavigationController(rootViewController: userSearchVC)
-        navUserSearchVC.tabBarItem = UITabBarItem(title: "Suche", image: UIImage(systemName: "magnifyingglass"), tag: 0)
+        navUserSearchVC.tabBarItem = UITabBarItem(title: "Suche", image: UIImage(systemName: "magnifyingglass"), tag: 1)
         
         let chatListVC = ChatListViewController()
         let navChatListVC = UINavigationController(rootViewController: chatListVC)
-        navChatListVC.tabBarItem = UITabBarItem(title: "Chats", image: UIImage(systemName: "message"), tag: 1)
-        
-//        let callListVC = CallListVC()
-//        let navCallListVC = UINavigationController(rootViewController: callListVC)
-//        navCallListVC.tabBarItem = UITabBarItem(title: "Anrufe", image: UIImage(systemName: "phone"), tag: 2)
-        
+        navChatListVC.tabBarItem = UITabBarItem(title: "Chats", image: UIImage(systemName: "message"), tag: 2)
+                
         let friendListVC = FriendListViewController()
         let navFriendListVC = UINavigationController(rootViewController: friendListVC)
         navFriendListVC.tabBarItem = UITabBarItem(title: "Freunde", image: UIImage(systemName: "person.3"), tag: 3)
@@ -56,7 +60,7 @@ class HomeVC: UITabBarController {
         let navProfileViewHostingController = UINavigationController(rootViewController: profileViewHostingController)
         navProfileViewHostingController.tabBarItem = UITabBarItem(title: "Profil", image: UIImage(systemName: "person.circle"), tag: 4)
         
-        viewControllers = [navUserSearchVC, navChatListVC, navFriendListVC, navProfileViewHostingController]
+        viewControllers = [navPostsViewHostingController, navUserSearchVC, navChatListVC, navFriendListVC, navProfileViewHostingController]
     }
     
     func fetchAndSetFriendRequests() {

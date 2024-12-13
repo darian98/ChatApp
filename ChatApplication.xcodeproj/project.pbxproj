@@ -39,6 +39,10 @@
 		0B2681582CFDE3DD000E6870 /* ProfileViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2681572CFDE3DD000E6870 /* ProfileViewModel.swift */; };
 		0B26815A2CFDEF39000E6870 /* UIApplication+Extension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B2681592CFDEF39000E6870 /* UIApplication+Extension.swift */; };
 		0B26815D2CFF7179000E6870 /* UserSearchListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B26815C2CFF7179000E6870 /* UserSearchListCell.swift */; };
+		0B445F162D09F3B10091577B /* PostsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B445F152D09F3B10091577B /* PostsView.swift */; };
+		0B445F182D09F3E40091577B /* Post.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B445F172D09F3E40091577B /* Post.swift */; };
+		0B445F1A2D09F45E0091577B /* PostsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B445F192D09F45E0091577B /* PostsViewModel.swift */; };
+		0B445F1C2D09FE510091577B /* PostService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B445F1B2D09FE510091577B /* PostService.swift */; };
 		0B71EBF02CEF6FF00072AF59 /* FirebaseMessaging in Frameworks */ = {isa = PBXBuildFile; productRef = 0B71EBEF2CEF6FF00072AF59 /* FirebaseMessaging */; };
 		0B71EBF42CF235A10072AF59 /* AudioService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0B71EBF32CF235A10072AF59 /* AudioService.swift */; };
 		0B71EBF62CF235B50072AF59 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 0B71EBF52CF235B50072AF59 /* FirebaseStorage */; };
@@ -81,6 +85,10 @@
 		0B2681572CFDE3DD000E6870 /* ProfileViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileViewModel.swift; sourceTree = "<group>"; };
 		0B2681592CFDEF39000E6870 /* UIApplication+Extension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIApplication+Extension.swift"; sourceTree = "<group>"; };
 		0B26815C2CFF7179000E6870 /* UserSearchListCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSearchListCell.swift; sourceTree = "<group>"; };
+		0B445F152D09F3B10091577B /* PostsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostsView.swift; sourceTree = "<group>"; };
+		0B445F172D09F3E40091577B /* Post.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Post.swift; sourceTree = "<group>"; };
+		0B445F192D09F45E0091577B /* PostsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostsViewModel.swift; sourceTree = "<group>"; };
+		0B445F1B2D09FE510091577B /* PostService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PostService.swift; sourceTree = "<group>"; };
 		0B71EBF32CF235A10072AF59 /* AudioService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioService.swift; sourceTree = "<group>"; };
 		0B71EBF72CF4AC640072AF59 /* ConfigureGroupChatVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConfigureGroupChatVC.swift; sourceTree = "<group>"; };
 		0B71EBFA2CF4BDF40072AF59 /* ChatViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatViewController.swift; sourceTree = "<group>"; };
@@ -141,6 +149,7 @@
 		0B11FA9E2CEB8FAA00FE0004 /* Controller */ = {
 			isa = PBXGroup;
 			children = (
+				0B445F142D09F3950091577B /* Posts */,
 				0B2681512CFC9E2B000E6870 /* Profile */,
 				0B1A49182CED6F8C0062BDF5 /* UserSearch */,
 				0B1A49172CED6F830062BDF5 /* Friendlist */,
@@ -159,6 +168,7 @@
 				0B11FAA72CEB8FB500FE0004 /* FriendRequest.swift */,
 				0B11FAA82CEB8FB500FE0004 /* Message.swift */,
 				0B11FAA92CEB8FB500FE0004 /* UserModel.swift */,
+				0B445F172D09F3E40091577B /* Post.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -181,6 +191,7 @@
 				0B11FAB62CEB8FC500FE0004 /* UserService.swift */,
 				0B11FACA2CECEF0600FE0004 /* VideoCallService.swift */,
 				0B71EBF32CF235A10072AF59 /* AudioService.swift */,
+				0B445F1B2D09FE510091577B /* PostService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -306,6 +317,15 @@
 			path = ChatList;
 			sourceTree = "<group>";
 		};
+		0B445F142D09F3950091577B /* Posts */ = {
+			isa = PBXGroup;
+			children = (
+				0B445F152D09F3B10091577B /* PostsView.swift */,
+				0B445F192D09F45E0091577B /* PostsViewModel.swift */,
+			);
+			path = Posts;
+			sourceTree = "<group>";
+		};
 		0B71EBF92CF4BDDF0072AF59 /* GroupChat */ = {
 			isa = PBXGroup;
 			children = (
@@ -416,7 +436,9 @@
 				0B11FAA22CEB8FAA00FE0004 /* LoginViewController.swift in Sources */,
 				0B11FA882CEB8EBB00FE0004 /* HomeVC.swift in Sources */,
 				0B11FA842CEB8EBB00FE0004 /* AppDelegate.swift in Sources */,
+				0B445F1C2D09FE510091577B /* PostService.swift in Sources */,
 				0B11FAB22CEB8FBB00FE0004 /* UIViewController+Extension.swift in Sources */,
+				0B445F162D09F3B10091577B /* PostsView.swift in Sources */,
 				0B11FAAB2CEB8FB500FE0004 /* Chat.swift in Sources */,
 				0BEB223C2D086F9F001E026A /* UserProfileViewModel.swift in Sources */,
 				0B11FABA2CEB8FC500FE0004 /* FriendService.swift in Sources */,
@@ -431,6 +453,7 @@
 				0B11FAA32CEB8FAA00FE0004 /* UserSearchViewController.swift in Sources */,
 				0B11FAAF2CEB8FB500FE0004 /* UserModel.swift in Sources */,
 				0B26815A2CFDEF39000E6870 /* UIApplication+Extension.swift in Sources */,
+				0B445F182D09F3E40091577B /* Post.swift in Sources */,
 				0B11FABB2CEB8FC500FE0004 /* UserService.swift in Sources */,
 				0B71EBFD2CF68AE60072AF59 /* ChatListCell.swift in Sources */,
 				0B11FAAE2CEB8FB500FE0004 /* Message.swift in Sources */,
@@ -443,6 +466,7 @@
 				0B26815D2CFF7179000E6870 /* UserSearchListCell.swift in Sources */,
 				0BEB22382D0864C1001E026A /* UserProfileView.swift in Sources */,
 				0B11FACB2CECEF0600FE0004 /* VideoCallService.swift in Sources */,
+				0B445F1A2D09F45E0091577B /* PostsViewModel.swift in Sources */,
 				0B2681562CFDD210000E6870 /* ImagePicker.swift in Sources */,
 				0B11FAB82CEB8FC500FE0004 /* AuthService.swift in Sources */,
 				0B71EBF82CF4AC640072AF59 /* ConfigureGroupChatVC.swift in Sources */,
