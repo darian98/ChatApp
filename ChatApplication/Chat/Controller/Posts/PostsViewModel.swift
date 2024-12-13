@@ -26,7 +26,7 @@ class PostsViewModel: ObservableObject {
     init() {
         listenForPosts()
     }
-    
+    // MARK: Function to add listener for new posts
     func listenForPosts() {
         PostService.shared.listenForPostsUpdates { [weak self] result in
             switch result {
@@ -40,6 +40,7 @@ class PostsViewModel: ObservableObject {
         }
     }
     
+    // MARK: Function to add listener for any new comments in a specific post
     func listenForComments(for post: Post) {
         PostService.shared.listenForCommentsUpdates(forPostID: post.id) { [weak self] result in
             switch result {
@@ -58,6 +59,7 @@ class PostsViewModel: ObservableObject {
         }
     }
     
+    // MARK: Checking if the post is liked by the current user, if so, adding it to the local list with the IDs of the liked posts
     func fetchIsPostLiked(postID: String, senderID: String) {
         Task {
             let postLiked = await isPostLikedByCurrentUser(postID: postID, senderID: senderID)
@@ -68,7 +70,7 @@ class PostsViewModel: ObservableObject {
             }
         }
     }
-    
+    // MARK: Fetching if the post is liked by the currentUser from FireStore asynchronously
     func isPostLikedByCurrentUser(postID: String, senderID: String) async -> Bool {
         do {
             let isPostLiked = try await PostService.shared.isPostLikedByUser(postID: postID, senderID: senderID)
@@ -80,6 +82,7 @@ class PostsViewModel: ObservableObject {
     }
     
     
+    // MARK: Checking if the comment is liked by the current user, if so, adding it to the local list with the IDs of the liked comments
     func fetchIsCommentLiked(postID: String, commentID: String, senderID: String) {
         Task {
             let isLiked = await isCommentLikedByCurrentUser(postID: postID, commentID: commentID, senderID: senderID)
@@ -91,8 +94,8 @@ class PostsViewModel: ObservableObject {
         }
     }
     
+    // MARK: Fetching if the comment is liked by the currentUser from FireStore asynchronously
     func isCommentLikedByCurrentUser(postID: String, commentID: String, senderID: String) async -> Bool {
-        //return commentIDsLikedByCurrentUser.contains(commentID)
             do {
                 let isCommentLiked = try await PostService.shared.isCommentLikedByUser(postID: postID, commentID: commentID, senderID: senderID)
                 
