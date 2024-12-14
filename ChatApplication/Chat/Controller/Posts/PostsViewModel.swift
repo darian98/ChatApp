@@ -8,13 +8,14 @@
 import Foundation
 import SwiftUI
 
-
 class PostsViewModel: ObservableObject {
     @Published var posts: [Post] = []
     @Published var editMode: Bool = false
     @Published var commentMode: Bool = false
     @Published var commentText: String = ""
+    
     @Published var userNames: [String: String] = [:]
+    @Published var userProfileImages: [String: String] = [:]
     
     @Published var commentVisibility: [String: Bool] = [:]
     @Published var showCommentSheet: Bool = false
@@ -22,6 +23,9 @@ class PostsViewModel: ObservableObject {
     
     @Published var postIDsLikedByCurrentUser: [String] = []
     @Published var commentIDsLikedByCurrentUser: [String] = []
+    
+    @Published var isProcessingLikeForPost: Bool = false
+    @Published var isProcessingLikeForComment: Bool = false
     
     init() {
         listenForPosts()
@@ -107,6 +111,8 @@ class PostsViewModel: ObservableObject {
     }
     
     func addLikeToPost(post: Post, senderID: String) {
+        guard !isProcessingLikeForPost else { return }
+        isProcessingLikeForPost = true
         Task {
             do {
                 try await PostService.shared.addOrRemoveLikeFromPost(postID: post.id, senderID: senderID)
@@ -117,10 +123,15 @@ class PostsViewModel: ObservableObject {
             } catch {
                 print("Failed to add like: \(error)")
             }
+            DispatchQueue.main.async {
+                self.isProcessingLikeForPost = false
+            }
         }
     }
     
     func removeLikeFromPost(post: Post, senderID: String) {
+        guard !isProcessingLikeForPost else { return }
+        isProcessingLikeForPost = true
         Task {
             do {
                 try await PostService.shared.addOrRemoveLikeFromPost(postID: post.id, senderID: senderID)
@@ -131,10 +142,15 @@ class PostsViewModel: ObservableObject {
             } catch {
                 print("Failed to add like: \(error)")
             }
+            DispatchQueue.main.async {
+                self.isProcessingLikeForPost = false
+            }
         }
     }
     
     func addLikeToComment(postID: String, commentID: String, senderID: String) {
+        guard !isProcessingLikeForComment else { return }
+        isProcessingLikeForComment = true
         Task {
             do {
                 try await PostService.shared.addOrRemoveLikeFromComment(postID: postID, commentID: commentID, senderID: senderID)
@@ -144,9 +160,14 @@ class PostsViewModel: ObservableObject {
             } catch {
                 print("Error adding like to Comment: \(error)")
             }
+            DispatchQueue.main.async {
+                self.isProcessingLikeForComment = false
+            }
         }
     }
     func removeLikeFromComment(postID: String, commentID: String, senderID: String) {
+        guard !isProcessingLikeForComment else { return }
+        isProcessingLikeForComment = true
         Task {
             do {
                 try await PostService.shared.addOrRemoveLikeFromComment(postID: postID, commentID: commentID, senderID: senderID)
@@ -156,10 +177,24 @@ class PostsViewModel: ObservableObject {
             } catch {
                 print("Error removing like from Comment: \(error)")
             }
+            DispatchQueue.main.async {
+                self.isProcessingLikeForComment = false
+            }
         }
     }
     
-    
+    func loadUserImages(for senderID: String) async {
+        guard userProfileImages[senderID] == nil else { return }
+        do {
+            guard let user = try await UserService.shared.fetchUser(byID: senderID) else { return }
+            DispatchQueue.main.async {
+                self.userProfileImages[senderID] = user.profileImage
+            }
+        } catch {
+            print("Fehler beim Laden des ProfilBildes für \(senderID) : \(error.localizedDescription)")
+        }
+        
+    }
     
     
      func loadUserName(for senderID: String) async {

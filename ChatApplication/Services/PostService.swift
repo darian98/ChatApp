@@ -112,15 +112,22 @@ class PostService {
             // MARK: Prüfen, ob der Nutzer den Post schon geliket hat
             if senderIDs.contains(senderID) {
                 // MARK: Like wieder vom Post entfernen
+                
+                let updatedSenderIDs = senderIDs.filter { $0 != senderID }
+                
                 try await commentForPostRef.updateData([
-                    "likes.likesCount": FieldValue.increment(Int64(-1)),
-                    "likes.senderIDs": FieldValue.arrayRemove([senderID])
+                    "likes.senderIDs": FieldValue.arrayRemove([senderID]),
+                    "likes.likesCount": updatedSenderIDs.count
+                    
                 ])
             } else {
                 // MARK: Post liken
+                let updatedSenderIDs = senderIDs + [senderID]
+                
                 try await commentForPostRef.updateData([
-                    "likes.likesCount": FieldValue.increment(Int64(1)),
-                    "likes.senderIDs": FieldValue.arrayUnion([senderID])
+                    "likes.senderIDs": FieldValue.arrayUnion([senderID]),
+                    "likes.likesCount": FieldValue.increment(Int64(1))
+            
                 ])
                 print("Like added to post successfully!")
             }
