@@ -139,7 +139,6 @@ extension PostsView {
                                 .padding(.top, 4)
                         }
                     }
-                    
             }
         }
             .sheet(isPresented: $viewModel.showCommentSheet, content: {
@@ -151,6 +150,58 @@ extension PostsView {
             })
     }
   }
+    
+    private func commentSection(for post: Post) -> some View {
+        ScrollView {
+            ForEach(post.comments.sorted { $0.timestamp > $1.timestamp }) { comment in
+                HStack(alignment: .center) {
+                    commenterUserImage(for: comment)
+                    commentName(for: comment)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Spacer().frame(width: 140)
+                    HStack {
+                        commentlikeButton(postID: post.id, commentID: comment.id)
+                        
+                        commentLikesCountText(likesCount: comment.likes.likesCount)
+                    }
+                    .frame(width: 50)
+                }
+                .padding(.vertical, 6)
+                .padding(.horizontal, 12)
+                .background(Color.gray.opacity(0.1))
+                .cornerRadius(8)
+            }
+        }
+    }
+    
+    private func commenterUserImage(for comment: Comment) -> some View {
+        Group {
+            if let userImageString = viewModel.userProfileImages[comment.senderID] {
+                if let imageData     = Data(base64Encoded: userImageString),
+                   let image            = UIImage(data: imageData) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 42, height: 42)
+                        .clipShape(Circle())
+                        .overlay(Circle().stroke(Color.gray, lineWidth: 1))
+                        .shadow(radius: 2)
+                        
+                }
+            } else {
+                    Image(systemName: "person.circle")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 30, height: 30)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.gray, lineWidth: 1))
+                    .shadow(radius: 2)
+                    .task {
+                        await viewModel.loadUserImages(for: comment.senderID)
+                    }
+            }
+        }
+    }
     
     private func commentName(for comment: Comment) -> some View {
         Group {
@@ -166,20 +217,6 @@ extension PostsView {
         }
         .font(.caption)
         .foregroundStyle(.gray)
-    }
-    
-    private func commentSection(for post: Post) -> some View {
-        ScrollView {
-            ForEach(post.comments.sorted { $0.timestamp > $1.timestamp }) { comment in
-                HStack {
-                    commentName(for: comment)
-                    Spacer().frame(width: 140)
-                    commentlikeButton(postID: post.id, commentID: comment.id)
-                    
-                    commentLikesCountText(likesCount: comment.likes.likesCount)
-                }
-            }
-        }
     }
     
     private func commentLikesCountText(likesCount: Int) -> some View {
