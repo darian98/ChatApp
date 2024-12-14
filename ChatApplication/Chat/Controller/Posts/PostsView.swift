@@ -156,9 +156,9 @@ extension PostsView {
             ForEach(post.comments.sorted { $0.timestamp > $1.timestamp }) { comment in
                 HStack(alignment: .center) {
                     commenterUserImage(for: comment)
-                    commentName(for: comment)
+                    commentData(for: comment)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Spacer().frame(width: 140)
+                    Spacer().frame(width: 120)
                     HStack {
                         commentlikeButton(postID: post.id, commentID: comment.id)
                         
@@ -203,11 +203,21 @@ extension PostsView {
         }
     }
     
-    private func commentName(for comment: Comment) -> some View {
+    private func commentData(for comment: Comment) -> some View {
         Group {
             if let commenterName = viewModel.userNames[comment.senderID] {
-                Text("\(commenterName): \(comment.comment)")
-                    .padding(6)
+                VStack(alignment: .leading) {
+                    HStack {
+                        Text("\(commenterName)")
+                            .fontWeight(.bold)
+                        Text(timestampDisplay(for: comment.timestamp))
+                            .fontWeight(.semibold)
+                            .lineLimit(1)
+                    }
+                    Text("\(comment.comment)")
+                        .padding(.top, 4)
+                }
+                .padding(6)
             } else {
                 Text("Lade Benutzername...")
                     .task {
@@ -218,6 +228,31 @@ extension PostsView {
         .font(.caption)
         .foregroundStyle(.gray)
     }
+    
+    private func timestampDisplay(for date: Date) -> String {
+        let now = Date()
+        let interval = now.timeIntervalSince(date)
+
+        if interval < 3600 { // Weniger als eine Stunde
+            let minutes = Int(interval / 60) // Minuten genau berechnen
+            if minutes < 1 {
+                return "Gerade eben"
+            }
+            return "vor \(minutes) Minuten"
+        } else if interval < 86400 { // Weniger als ein Tag
+            let hours = Int(interval / 3600)
+            return "vor \(hours) Std."
+        } else if interval < 7 * 86400 { // Weniger als eine Woche
+            let days = Int(interval / 86400)
+            return "vor \(days) Tagen"
+        } else { // Mehr als eine Woche
+            let formatter = DateFormatter()
+            formatter.dateStyle = .short
+            formatter.timeStyle = .short
+            return formatter.string(from: date)
+        }
+    }
+    
     
     private func commentLikesCountText(likesCount: Int) -> some View {
         Text("\(likesCount)")
