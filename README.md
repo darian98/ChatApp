@@ -14,7 +14,7 @@
   Users can see who is typing in the current chat
   Last message of the chat is shown with the username of the sender in chatlist
 
-- Timer for destroying Chat-Messages
+- TIMER FOR DESTROYING CHAT MESSAGES:
   Users can set a Timer (in seconds) to destroy all the messages within a chat
   
 - PROFILE:
