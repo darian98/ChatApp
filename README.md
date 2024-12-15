@@ -17,7 +17,7 @@
   Last message of the chat is shown with the username of the sender in chatlist  
 
 - TIMER FOR DESTROYING CHAT MESSAGES:  
-  Users can set a Timer (in seconds) to destroy all the messages within a chat  
+  Users can set a timer (in seconds) to destroy all the messages within a chat  
 
 - POSTS  
   Users can make a post with a title and message (for now)  
