@@ -18,6 +18,12 @@
 
 - TIMER FOR DESTROYING CHAT MESSAGES:  
   Users can set a Timer (in seconds) to destroy all the messages within a chat  
+
+- POSTS
+  Users can make a post with a title and message (for now)  
+  Users can like posts  
+  Users can comment posts - comments can also be liked by users  
+  Comments show the exact time when commented ("10 Hours ago", "10 Mins ago" "Just now" etc)  
   
 - PROFILE:  
   Users can look at the Profile of other users (Profile includes a Bio, the friendlist and count, and userdata info)  
