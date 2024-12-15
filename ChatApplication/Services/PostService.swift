@@ -137,8 +137,8 @@ class PostService {
     }
     
     
-    func listenForCommentsUpdates(forPostID postID: String, completion: @escaping (Result<[Comment], Error>) -> Void) {
-        db.collection("posts").document(postID).collection("comments").addSnapshotListener { snapshot, error in
+    func listenForCommentsUpdates(forPostID postID: String, completion: @escaping (Result<[Comment], Error>) -> Void) -> ListenerRegistration {
+        return db.collection("posts").document(postID).collection("comments").addSnapshotListener { snapshot, error in
             if let error = error {
                 completion(.failure(error))
                 return

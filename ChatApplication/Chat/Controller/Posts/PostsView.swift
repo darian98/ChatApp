@@ -141,7 +141,12 @@ extension PostsView {
                     }
             }
         }
-            .sheet(isPresented: $viewModel.showCommentSheet, content: {
+            .sheet(isPresented: $viewModel.showCommentSheet, onDismiss: {
+                print("Ondismiss getting triggered!")
+                if let selectedPost = viewModel.selectedPost {
+                       viewModel.stopListeningForComments(for: selectedPost)
+                   }
+            }, content: {
                 if let selectedPost = viewModel.selectedPost {
                     commentSheet(for: selectedPost)
                         .presentationDetents([.height(UIScreen.main.bounds.size.height * 0.65)])
@@ -154,22 +159,26 @@ extension PostsView {
     private func commentSection(for post: Post) -> some View {
         ScrollView {
             ForEach(post.comments.sorted { $0.timestamp > $1.timestamp }) { comment in
-                HStack(alignment: .center) {
-                    commenterUserImage(for: comment)
-                    commentData(for: comment)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                    Spacer().frame(width: 120)
-                    HStack {
-                        commentlikeButton(postID: post.id, commentID: comment.id)
-                        
-                        commentLikesCountText(likesCount: comment.likes.likesCount)
+                VStack {
+                    HStack(alignment: .center) {
+                        commenterUserImage(for: comment)
+                        commentData(for: comment)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        Spacer().frame(width: 100)
+                        HStack {
+                            commentlikeButtonBeta(postID: post.id, commentID: comment.id, commentsLikes: comment.likes)
+                            
+                            commentLikesCountText(likesCount: comment.likes.likesCount)
+                        }
+                        .frame(width: 36)
+                        .padding(.bottom, 6)
+                        .padding(.trailing, 16)
                     }
-                    .frame(width: 50)
+                    .padding(.vertical, 6)
+                    .padding(.horizontal, 12)
+                    .cornerRadius(8)
+                    Divider().background(.white)
                 }
-                .padding(.vertical, 6)
-                .padding(.horizontal, 12)
-                .background(Color.gray.opacity(0.1))
-                .cornerRadius(8)
             }
         }
     }
@@ -226,7 +235,7 @@ extension PostsView {
             }
         }
         .font(.caption)
-        .foregroundStyle(.gray)
+        .foregroundStyle(.white)
     }
     
     private func timestampDisplay(for date: Date) -> String {
@@ -257,6 +266,7 @@ extension PostsView {
     private func commentLikesCountText(likesCount: Int) -> some View {
         Text("\(likesCount)")
             .font(.caption)
+            .foregroundStyle(.white)
             .padding(.leading, 4)
     }
     
@@ -276,11 +286,34 @@ extension PostsView {
         }
     }
     
+    private func commentlikeButtonBeta(postID: String, commentID: String, commentsLikes: Likes) -> some View {
+        Button {
+            if ifCommentWasLikedByUser(commentsLikes: commentsLikes, userID: currentUser.uid) {
+                viewModel.addLikeToComment(postID: postID, commentID: commentID, senderID: currentUser.uid)
+            } else {
+                viewModel.removeLikeFromComment(postID: postID, commentID: commentID, senderID: currentUser.uid)
+            }
+        } label: {
+            Image(systemName: ifCommentWasLikedByUser(commentsLikes: commentsLikes, userID: currentUser.uid) ? "heart.fill": "heart")
+                .foregroundStyle(ifCommentWasLikedByUser(commentsLikes: commentsLikes, userID: currentUser.uid) ? .red : .white)
+                .font(.caption)
+        }
+        .onAppear {
+            //viewModel.fetchIsCommentLiked(postID: postID, commentID: commentID, senderID: currentUser.uid)
+        }
+    }
+    
+    private func ifCommentWasLikedByUser(commentsLikes: Likes, userID: String) -> Bool {
+        return commentsLikes.senderIDs.contains(userID)
+    }
+    
+    
     private func commentInputView(for post: Post) -> some View {
         HStack {
             TextField("Kommentar eingeben", text: $viewModel.commentText)
                 .padding(6)
                 .background(Color.gray.opacity(0.2))
+                .foregroundStyle(.white)
                 .cornerRadius(8)
             Button {
                 Task {
@@ -313,7 +346,7 @@ extension PostsView {
                 commentSection(for: post)
                 commentInputView(for: post)
             }
-                .background(Color.white)
+                .background(Color.gray.opacity(0.5))
                 .cornerRadius(16)
                 .shadow(radius: 10)
     }

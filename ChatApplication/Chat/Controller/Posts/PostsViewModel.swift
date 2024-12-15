@@ -7,6 +7,7 @@
 
 import Foundation
 import SwiftUI
+import FirebaseFirestore
 
 class PostsViewModel: ObservableObject {
     @Published var posts: [Post] = []
@@ -17,7 +18,6 @@ class PostsViewModel: ObservableObject {
     @Published var userNames: [String: String] = [:]
     @Published var userProfileImages: [String: String] = [:]
     
-    @Published var commentVisibility: [String: Bool] = [:]
     @Published var showCommentSheet: Bool = false
     @Published var selectedPost: Post? = nil
     
@@ -26,6 +26,8 @@ class PostsViewModel: ObservableObject {
     
     @Published var isProcessingLikeForPost: Bool = false
     @Published var isProcessingLikeForComment: Bool = false
+    
+    private var commentListeners: [String: ListenerRegistration] = [:]
     
     init() {
         listenForPosts()
@@ -46,7 +48,10 @@ class PostsViewModel: ObservableObject {
     
     // MARK: Function to add listener for any new comments in a specific post
     func listenForComments(for post: Post) {
-        PostService.shared.listenForCommentsUpdates(forPostID: post.id) { [weak self] result in
+        
+        stopListeningForComments(for: post)
+        
+        let listener = PostService.shared.listenForCommentsUpdates(forPostID: post.id) { [weak self] result in
             switch result {
             case .success(let updatedComments):
                 DispatchQueue.main.async {
@@ -61,7 +66,22 @@ class PostsViewModel: ObservableObject {
                 print("Error listening for comments: \(error)")
             }
         }
+        commentListeners[post.id] = listener
     }
+    
+    func stopListeningForComments(for post: Post) {
+            // Entferne Listener für den Post, falls vorhanden
+        print("Removing: \(commentListeners[post.id]?.description)")
+            commentListeners[post.id]?.remove()
+            commentListeners[post.id] = nil
+        }
+    
+    func stopAllCommentListeners() {
+            // Entferne alle Listener
+            commentListeners.values.forEach { $0.remove() }
+            commentListeners.removeAll()
+        }
+    
     
     // MARK: Checking if the post is liked by the current user, if so, adding it to the local list with the IDs of the liked posts
     func fetchIsPostLiked(postID: String, senderID: String) {
@@ -110,6 +130,7 @@ class PostsViewModel: ObservableObject {
             return false
     }
     
+    // MARK: Adding like to a specific post
     func addLikeToPost(post: Post, senderID: String) {
         guard !isProcessingLikeForPost else { return }
         isProcessingLikeForPost = true
@@ -129,6 +150,7 @@ class PostsViewModel: ObservableObject {
         }
     }
     
+    // MARK: Removing like from a specific post
     func removeLikeFromPost(post: Post, senderID: String) {
         guard !isProcessingLikeForPost else { return }
         isProcessingLikeForPost = true
@@ -148,6 +170,7 @@ class PostsViewModel: ObservableObject {
         }
     }
     
+    // MARK: Adding like to a specific comment
     func addLikeToComment(postID: String, commentID: String, senderID: String) {
         guard !isProcessingLikeForComment else { return }
         isProcessingLikeForComment = true
@@ -165,6 +188,8 @@ class PostsViewModel: ObservableObject {
             }
         }
     }
+    
+    // MARK: Removing like from a specific post
     func removeLikeFromComment(postID: String, commentID: String, senderID: String) {
         guard !isProcessingLikeForComment else { return }
         isProcessingLikeForComment = true
@@ -182,7 +207,7 @@ class PostsViewModel: ObservableObject {
             }
         }
     }
-    
+    // MARK: Loading user images for comment senders
     func loadUserImages(for senderID: String) async {
         guard userProfileImages[senderID] == nil else { return }
         do {
@@ -196,7 +221,7 @@ class PostsViewModel: ObservableObject {
         
     }
     
-    
+    // MARK: Loading user names for comment senders
      func loadUserName(for senderID: String) async {
         guard userNames[senderID] == nil else { return } // Vermeide doppelte Anfragen
         do {
@@ -211,17 +236,4 @@ class PostsViewModel: ObservableObject {
             }
         }
     }
-    
-    func toggleComments(for postID: String) {
-        if let isVisible = commentVisibility[postID] {
-            commentVisibility[postID] = !isVisible
-        } else {
-            commentVisibility[postID] = true
-        }
-    }
-
-    func isCommentVisible(for postID: String) -> Bool {
-        return commentVisibility[postID] ?? false
-    }
-    
 }
