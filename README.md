@@ -19,7 +19,7 @@
 - TIMER FOR DESTROYING CHAT MESSAGES:  
   Users can set a Timer (in seconds) to destroy all the messages within a chat  
 
-- POSTS
+- POSTS  
   Users can make a post with a title and message (for now)  
   Users can like posts  
   Users can comment posts - comments can also be liked by users  
