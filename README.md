@@ -10,6 +10,8 @@
   
 - CHAT AND GROUP-CHAT:  
   Users can start a groupchat with as many users as they wish  
+  Users can send text and voice messages within a chat  
+  Messages are sent encrypted from sender and get decrypted from reader  
   Users can see if the message was read by the other user (2 Checkmarks when read)  
   Users can see who is typing in the current chat  
   Last message of the chat is shown with the username of the sender in chatlist  
