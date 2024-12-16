@@ -8,46 +8,6 @@
 import Foundation
 import SwiftUI
 
-
-struct CreatePostView: View {
-    @Environment(\.presentationMode) var presentationMode
-    @State private var title: String = ""
-    @State private var message: String = ""
-    var currentUser: UserModel
-
-    var body: some View {
-        NavigationView {
-            VStack(alignment: .leading, spacing: 16) {
-                TextField("Titel eingeben", text: $title)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding()
-
-                TextField("Nachricht eingeben", text: $message)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                    .padding()
-
-                Spacer()
-            }
-            .navigationTitle("Post erstellen")
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Abbrechen") {
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                }
-
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Speichern") {
-                        PostService.shared.postToFirestoreDB(senderID: currentUser.uid, postTitle: title, postMessage: message)
-                        presentationMode.wrappedValue.dismiss()
-                    }
-                    .disabled(title.isEmpty || message.isEmpty)
-                }
-            }
-        }
-    }
-}
-
 struct PostsView: View {
     @ObservedObject var viewModel: PostsViewModel
     var currentUser: UserModel
@@ -55,9 +15,6 @@ struct PostsView: View {
     var body: some View {
         VStack {
                 postsList
-        }
-        .onAppear {
-            //viewModel.fetchPosts()
         }
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -166,7 +123,7 @@ extension PostsView {
                             .frame(maxWidth: .infinity, alignment: .leading)
                         Spacer().frame(width: 100)
                         HStack {
-                            commentlikeButtonBeta(postID: post.id, commentID: comment.id, commentsLikes: comment.likes)
+                            commentlikeButton(postID: post.id, commentID: comment.id, commentsLikes: comment.likes)
                             
                             commentLikesCountText(likesCount: comment.likes.likesCount)
                         }
@@ -195,7 +152,6 @@ extension PostsView {
                         .clipShape(Circle())
                         .overlay(Circle().stroke(Color.gray, lineWidth: 1))
                         .shadow(radius: 2)
-                        
                 }
             } else {
                     Image(systemName: "person.circle")
@@ -262,7 +218,6 @@ extension PostsView {
         }
     }
     
-    
     private func commentLikesCountText(likesCount: Int) -> some View {
         Text("\(likesCount)")
             .font(.caption)
@@ -270,23 +225,7 @@ extension PostsView {
             .padding(.leading, 4)
     }
     
-    private func commentlikeButton(postID: String, commentID: String) -> some View {
-        Button {
-            if !viewModel.commentIDsLikedByCurrentUser.contains(commentID) {
-                viewModel.addLikeToComment(postID: postID, commentID: commentID, senderID: currentUser.uid)
-            } else {
-                viewModel.removeLikeFromComment(postID: postID, commentID: commentID, senderID: currentUser.uid)
-            }
-        } label: {
-            Image(systemName: viewModel.commentIDsLikedByCurrentUser.contains(commentID) ? "heart.fill": "heart")
-                .font(.caption)
-        }
-        .onAppear {
-            viewModel.fetchIsCommentLiked(postID: postID, commentID: commentID, senderID: currentUser.uid)
-        }
-    }
-    
-    private func commentlikeButtonBeta(postID: String, commentID: String, commentsLikes: Likes) -> some View {
+    private func commentlikeButton(postID: String, commentID: String, commentsLikes: Likes) -> some View {
         Button {
             if ifCommentWasLikedByUser(commentsLikes: commentsLikes, userID: currentUser.uid) {
                 viewModel.addLikeToComment(postID: postID, commentID: commentID, senderID: currentUser.uid)
@@ -297,9 +236,6 @@ extension PostsView {
             Image(systemName: ifCommentWasLikedByUser(commentsLikes: commentsLikes, userID: currentUser.uid) ? "heart.fill": "heart")
                 .foregroundStyle(ifCommentWasLikedByUser(commentsLikes: commentsLikes, userID: currentUser.uid) ? .red : .white)
                 .font(.caption)
-        }
-        .onAppear {
-            //viewModel.fetchIsCommentLiked(postID: postID, commentID: commentID, senderID: currentUser.uid)
         }
     }
     
@@ -319,15 +255,11 @@ extension PostsView {
                 Task {
                     do {
                         try await PostService.shared.addCommentToPost(postID: post.id, senderID: currentUser.uid, comment: viewModel.commentText)
-                        
-                        
-                        
                         viewModel.commentText = ""
                         print("PostID: \(post.id)")
                     } catch {
                         print("ERROR")
                     }
-                    //viewModel.fetchPosts()
                 }
             } label: {
                 Image(systemName: "paperplane.fill")
