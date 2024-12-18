@@ -54,7 +54,7 @@ struct ProfileView: View {
         }
         .padding()
         .sheet(isPresented: $viewModel.showImagePicker) {
-            ImagePicker(profileViewModel: viewModel)
+            ImagePicker(selectedImage: $viewModel.selectedImage)
         }
         .alert(viewModel.alertTitle, isPresented: $viewModel.showAlert, actions: {
                     Button("OK", role: .cancel) { }

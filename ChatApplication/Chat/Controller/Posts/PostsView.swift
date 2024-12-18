@@ -11,6 +11,7 @@ import SwiftUI
 struct PostsView: View {
     @ObservedObject var viewModel: PostsViewModel
     var currentUser: UserModel
+    @StateObject private var imageLoader = AsyncImageLoader()
     
     var body: some View {
         VStack {
@@ -37,21 +38,43 @@ extension PostsView {
         List {
             ForEach(viewModel.posts) { post in
                 VStack {
-                    if let postingUserName = viewModel.userNames[post.senderID] {
-                        Text(postingUserName)
-                            .font(.headline)
-                    } else {
-                        Text("Lade Benutzername...")
-                            .font(.headline)
-                            .foregroundStyle(.gray)
-                            .task {
-                                await viewModel.loadUserName(for: post.senderID)
-                            }
+                    HStack {
+                        postingUserImage(for: post)
+                        
+                        if let postingUserName = viewModel.userNames[post.senderID] {
+                            Text(postingUserName)
+                                .font(.caption2)
+                                .foregroundStyle(.gray)
+                        } else {
+                            Text("Lade Benutzername...")
+                                .font(.caption2)
+                                .foregroundStyle(.gray)
+                                .task {
+                                    await viewModel.loadUserName(for: post.senderID)
+                                }
+                        }
+                        Text(post.title)
+                            .font(.subheadline)
+                            .padding(.leading, 20)
+                            .padding(.top, 6)
                     }
-                    Text(post.title)
-                        .font(.title3)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    
+                    if let imageString  = post.imageString,
+                       let imageData    = Data(base64Encoded: imageString),
+                       let uiimage = UIImage(data: imageData)
+                    {
+                        Image(uiImage: uiimage)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 200, height: 200)
+                    }
+                    
                     Text(post.message)
                         .font(.subheadline)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.vertical, 12)
                     
                     HStack {
                         Button(action: {
@@ -85,6 +108,7 @@ extension PostsView {
                                 }
                             } label: {
                                 Image(systemName: viewModel.postIDsLikedByCurrentUser.contains(post.id) ? "heart.fill" : "heart")
+                                    .foregroundStyle(viewModel.postIDsLikedByCurrentUser.contains(post.id) ? .red : .black)
                                     .font(.headline)
                             }
                             .onAppear {
@@ -140,19 +164,17 @@ extension PostsView {
         }
     }
     
-    private func commenterUserImage(for comment: Comment) -> some View {
+    private func postingUserImage(for post: Post) -> some View {
         Group {
-            if let userImageString = viewModel.userProfileImages[comment.senderID] {
-                if let imageData     = Data(base64Encoded: userImageString),
-                   let image            = UIImage(data: imageData) {
-                    Image(uiImage: image)
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 42, height: 42)
-                        .clipShape(Circle())
-                        .overlay(Circle().stroke(Color.gray, lineWidth: 1))
-                        .shadow(radius: 2)
-                }
+            if let image = imageLoader.postingUserImages[post.senderID] {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 42, height: 42)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.gray, lineWidth: 1))
+                    .shadow(radius: 2)
+        
             } else {
                     Image(systemName: "person.circle")
                     .resizable()
@@ -161,10 +183,36 @@ extension PostsView {
                     .clipShape(Circle())
                     .overlay(Circle().stroke(Color.gray, lineWidth: 1))
                     .shadow(radius: 2)
-                    .task {
-                        await viewModel.loadUserImages(for: comment.senderID)
-                    }
             }
+        }
+        .task(id: post.senderID) {
+            await imageLoader.loadUserImage(for: post.senderID, imagesFor: .postingUser)
+        }
+    }
+    
+    private func commenterUserImage(for comment: Comment) -> some View {
+        Group {
+            if let image = imageLoader.commenterImages[comment.senderID] {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 42, height: 42)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.gray, lineWidth: 1))
+                    .shadow(radius: 2)
+        
+            } else {
+                    Image(systemName: "person.circle")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 30, height: 30)
+                    .clipShape(Circle())
+                    .overlay(Circle().stroke(Color.gray, lineWidth: 1))
+                    .shadow(radius: 2)
+            }
+        }
+        .task(id: comment.senderID) {
+            await imageLoader.loadUserImage(for: comment.senderID, imagesFor: .commentingUser)
         }
     }
     

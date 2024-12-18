@@ -13,8 +13,8 @@ class PostService {
     static let shared = PostService()
     private let db = Firestore.firestore()
     
-    func postToFirestoreDB(senderID: String, postTitle: String, postMessage: String) {
-        let data: [String: Any] = [
+    func postToFirestoreDB(senderID: String, postTitle: String, postMessage: String, imageString: String? = nil) async throws {
+        var data: [String: Any] = [
             "senderID": senderID,
             "title": postTitle,
             "message": postMessage,
@@ -24,13 +24,22 @@ class PostService {
                 "senderIDs": []
             ]
         ]
-        db.collection("posts").addDocument(data: data) { error in
-            if let error = error {
-                print("Error uploading Post to FireStore: \(error)")
-            } else {
-                print("Post uploaded to Firestore successfully!")
+        if let imageString = imageString {
+            data["imageString"] = imageString
+        }
+
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+            db.collection("posts").addDocument(data: data) { error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                    print("Error uploading Post to FireStore: \(error)")
+                } else {
+                    continuation.resume()
+                    print("Post uploaded to Firestore successfully!")
+                }
             }
         }
+        
     }
     
     func addCommentToPost(postID: String, senderID: String, comment: String) async throws {
@@ -101,6 +110,8 @@ class PostService {
 
     
     func addOrRemoveLikeFromComment(postID: String, commentID: String, senderID: String) async throws {
+        let startTime = Date()
+        
         let commentForPostRef = db.collection("posts").document(postID).collection("comments").document(commentID)
         do {
             let commentDoc = try await commentForPostRef.getDocument()
@@ -110,6 +121,8 @@ class PostService {
                 throw NSError(domain: "Firestore", code: 0, userInfo: [NSLocalizedDescriptionKey: "Unable to retrieve likes data"])
             }
             // MARK: Prüfen, ob der Nutzer den Post schon geliket hat
+            let secondStartTime = Date()
+           // print("time used: \(secondStartTime - startTime)")
             if senderIDs.contains(senderID) {
                 // MARK: Like wieder vom Post entfernen
                 
@@ -174,6 +187,7 @@ class PostService {
     }
 
     func listenForPostsUpdates(completion: @escaping (Result<[Post], Error>) -> Void) {
+        print("Listening for post updates....")
         db.collection("posts").addSnapshotListener { snapshot, error in
             if let error = error {
                 completion(.failure(error))
@@ -223,15 +237,20 @@ class PostService {
                     } ?? []
                     
                     // Post erstellen
+                    //var post: Post
+                    let imageBase64String = data["imageString"] as? String
+                    
                     let post = Post(
-                        id: document.documentID,
-                        senderID: senderID,
-                        title: title,
-                        message: message,
-                        comments: comments,
-                        timestamp: timeStamp.dateValue(),
-                        likes: postLikes
+                    id: document.documentID,
+                    senderID: senderID,
+                    title: title,
+                    message: message,
+                    comments: comments,
+                    timestamp: timeStamp.dateValue(),
+                    likes: postLikes,
+                    imageString: imageBase64String
                     )
+                    
                     posts.append(post)
                 }
                 completion(.success(posts))

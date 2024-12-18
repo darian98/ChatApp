@@ -63,7 +63,7 @@ class ProfileViewModel: ObservableObject {
         var data: [String: Any] = ["bio": bio]
         
         if let image = selectedImage {
-            if let compressedImageData = compressImage(image, to: 900) {
+            if let compressedImageData = ImageHelper.compressImage(image, to: 900) {
                 let base64Image = compressedImageData.base64EncodedString()
                 data["profileImage"] = base64Image
             } else {
@@ -100,7 +100,6 @@ class ProfileViewModel: ObservableObject {
                 imageData = compressedData
             }
         }
-        
         return imageData
     }
     

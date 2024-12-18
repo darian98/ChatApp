@@ -14,13 +14,11 @@ class PostsViewModel: ObservableObject {
     @Published var editMode: Bool = false
     @Published var commentMode: Bool = false
     @Published var commentText: String = ""
-    
-    @Published var userNames: [String: String] = [:]
-    @Published var userProfileImages: [String: String] = [:]
-    
+
     @Published var showCommentSheet: Bool = false
     @Published var selectedPost: Post? = nil
     
+    @Published var userNames: [String: String] = [:]
     @Published var postIDsLikedByCurrentUser: [String] = []
     @Published var commentIDsLikedByCurrentUser: [String] = []
     
@@ -69,15 +67,20 @@ class PostsViewModel: ObservableObject {
         commentListeners[post.id] = listener
     }
     
+    // MARK: Falls vorhanden, wird der Listener für die Kommentare eines bestimmten Post entfernt.
     func stopListeningForComments(for post: Post) {
             // Entferne Listener für den Post, falls vorhanden
-        print("Removing: \(commentListeners[post.id]?.description)")
-            commentListeners[post.id]?.remove()
+        if let listener = commentListeners[post.id] {
+            print("Listener found for post \(post.id), removing it.")
+            listener.remove()
             commentListeners[post.id] = nil
+        } else {
+            print("No listener found for post: \(post.id)")
         }
+    }
     
+    // MARK: Alle Listener werden entfernt
     func stopAllCommentListeners() {
-            // Entferne alle Listener
             commentListeners.values.forEach { $0.remove() }
             commentListeners.removeAll()
         }
@@ -105,7 +108,6 @@ class PostsViewModel: ObservableObject {
         return false
     }
     
-    
     // MARK: Checking if the comment is liked by the current user, if so, adding it to the local list with the IDs of the liked comments
     func fetchIsCommentLiked(postID: String, commentID: String, senderID: String) {
         Task {
@@ -131,22 +133,19 @@ class PostsViewModel: ObservableObject {
     }
     
     // MARK: Adding like to a specific post
+    @MainActor
     func addLikeToPost(post: Post, senderID: String) {
         guard !isProcessingLikeForPost else { return }
         isProcessingLikeForPost = true
         Task {
             do {
                 try await PostService.shared.addOrRemoveLikeFromPost(postID: post.id, senderID: senderID)
-                DispatchQueue.main.async {
-                    self.postIDsLikedByCurrentUser.append(post.id)
-                    print("ADDING - PostIDSLikedByUserCount: \(self.postIDsLikedByCurrentUser.count)")
-                }
+                self.postIDsLikedByCurrentUser.append(post.id)
+                print("ADDING - PostIDSLikedByUserCount: \(self.postIDsLikedByCurrentUser.count)")
             } catch {
                 print("Failed to add like: \(error)")
             }
-            DispatchQueue.main.async {
-                self.isProcessingLikeForPost = false
-            }
+            isProcessingLikeForPost = false
         }
     }
     
@@ -207,33 +206,17 @@ class PostsViewModel: ObservableObject {
             }
         }
     }
-    // MARK: Loading user images for comment senders
-    func loadUserImages(for senderID: String) async {
-        guard userProfileImages[senderID] == nil else { return }
-        do {
-            guard let user = try await UserService.shared.fetchUser(byID: senderID) else { return }
-            DispatchQueue.main.async {
-                self.userProfileImages[senderID] = user.profileImage
-            }
-        } catch {
-            print("Fehler beim Laden des ProfilBildes für \(senderID) : \(error.localizedDescription)")
-        }
-        
-    }
-    
+   
     // MARK: Loading user names for comment senders
-     func loadUserName(for senderID: String) async {
+    @MainActor
+    func loadUserName(for senderID: String) async {
         guard userNames[senderID] == nil else { return } // Vermeide doppelte Anfragen
         do {
             guard let user = try await UserService.shared.fetchUser(byID: senderID) else { return }
-            DispatchQueue.main.async {
-                self.userNames[senderID] = user.displayName
-            }
+            self.userNames[senderID] = user.displayName
         } catch {
             print("Fehler beim Laden des Benutzernamens für \(senderID): \(error.localizedDescription)")
-            DispatchQueue.main.async {
-                self.userNames[senderID] = "Fehler beim Laden"
-            }
+            self.userNames[senderID] = "Fehler beim Laden"
         }
     }
 }

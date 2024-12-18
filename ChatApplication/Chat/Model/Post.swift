@@ -16,6 +16,7 @@ struct Post: Identifiable {
     var comments: [Comment]
     var timestamp: Date
     var likes: Likes
+    var imageString: String?
 }
 
 struct Comment: Identifiable {
