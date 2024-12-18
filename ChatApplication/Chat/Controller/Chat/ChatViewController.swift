@@ -9,6 +9,7 @@
     import UIKit
     import FirebaseAuth
     import CryptoKit
+    import SwiftUI
 
     class ChatViewController: UIViewController {
         // UI-Elemente
@@ -131,11 +132,13 @@
            }
         
         func configureUIBarButtonItems() {
+            let imageButton             = UIBarButtonItem(title: "", image: UIImage(systemName: "photo"), target: self, action: #selector(triggerImageButton))
+            
             let deletingMessagesTimer   = UIBarButtonItem(title: "", image: UIImage(systemName: "timer"), target: self, action: #selector(triggerDeleteMessagesTimerAlert))
             self.destroyingMessagesTimer = deletingMessagesTimer
             
             let addFriendButton         = UIBarButtonItem(title: "", image: UIImage(systemName: "person.fill.badge.plus"), target: self, action: #selector(addFriend))
-            navigationItem.rightBarButtonItems  = [addFriendButton, destroyingMessagesTimer]
+            navigationItem.rightBarButtonItems  = [addFriendButton, destroyingMessagesTimer, imageButton]
         }
         
         private func setupTypingIndicatorLabel() {
@@ -145,6 +148,30 @@
             typingIndicatorLabel.text = "" // Anfangs leer
             typingIndicatorLabel.textAlignment = .center
         }
+        
+        @objc func triggerImageButton() {
+            let imagePickerWrapper = ImagePickerWrapper { [weak self] selectedImage in
+                guard let self = self else {
+                    print("Returned already while guard self = self")
+                    return
+                }
+                print("Selected Image: \(selectedImage.debugDescription)")
+                self.handleSelectedImage(image: selectedImage)
+            }
+            let hostingController = UIHostingController(rootView: imagePickerWrapper)
+            present(hostingController, animated: true)
+        }
+        
+        func handleSelectedImage(image: UIImage?) {
+            guard let image = image else { return }
+            guard let compressedImageData = ImageHelper.compressImage(image, to: 900) else {
+                print("FAILED to CompressImageData")
+                return
+            }
+            let base64ImageString = compressedImageData.base64EncodedString()
+            print("Selected Image Base64: \(base64ImageString)")
+        }
+        
         
         @objc func triggerDeleteMessagesTimerAlert() {
             print("After trigger seconds = \(self.messagesDestroyingTimerInSeconds)")
@@ -479,9 +506,6 @@
             let keyboardHeight = keyboardFrame.height
 
             UIView.animate(withDuration: animationDuration) {
-                //self.tableView.contentInset.bottom = keyboardHeight + self.messageInputContainer.frame.height
-                //self.tableView.scrollIndicatorInsets.bottom = keyboardHeight + self.messageInputContainer.frame.height
-                //self.messageInputContainer.transform = CGAffineTransform(translationX: 0, y: -keyboardHeight * 0.76)
                 self.messageInputContainerBottomConstraint.constant = -keyboardHeight * 0.75
                 self.view.layoutIfNeeded()
             }
@@ -492,8 +516,6 @@
                   let animationDuration = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double else { return }
 
             UIView.animate(withDuration: animationDuration) {
-                //self.tableView.contentInset.bottom = 0
-                //self.messageInputContainer.transform = .identity
                 self.messageInputContainerBottomConstraint.constant = 0
                 self.view.layoutIfNeeded()
             }
@@ -505,7 +527,6 @@
             if message.isAudio {
                 AudioService.shared.playAudio(from: message.message)
             }
-            print("ROW IN TABLEVIEW CLICKED!")
         }
         
         func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
@@ -521,7 +542,6 @@
             if messageIsFromCurrentUser(message: message) {
                 if message.isAudio {
                     cell.textLabel?.text = "Du: Sprachnotiz \(readIndicator)"
-                    //vAudioService.shared.playAudio(from: message.message)
                 } else {
                     cell.textLabel?.text = "Du: \(message.message) \(readIndicator)"
                 }
