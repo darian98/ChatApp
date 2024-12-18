@@ -144,6 +144,7 @@ extension ProfileView {
         VStack(alignment: .leading) {
             Text("\(viewModel.currentUser.displayName)")
                 .font(.title2)
+                .bold()
             Text("\(viewModel.currentUser.email)")
                 .font(.subheadline)
                 .foregroundColor(.gray)
@@ -153,10 +154,11 @@ extension ProfileView {
     private var userBioText: some View {
         VStack(alignment : .leading) {
             HStack {
-                Text("Bio:")
-            }.padding(.top)
-            
-            Text("\(viewModel.bio)")
+                Text("Bio")
+                    .font(.headline)
+            }
+            .padding(.top)
+            Text("\(viewModel.bio.isEmpty ? "-" : viewModel.bio)")
                 .padding(.top, 2)
                 .font(.subheadline)
         }

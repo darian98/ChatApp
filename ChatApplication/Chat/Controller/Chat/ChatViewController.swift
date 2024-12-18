@@ -163,7 +163,7 @@
                         case .active(seconds: let seconds):
                             print("Timer wurde aktiviert!")
                             self.destroyingMessagesTimer.tintColor = .systemGreen
-                            self.showAlert(withTitle: "Nachrichten zerstören aktiviert!", message: self.configureTimerMessage(seconds: seconds))
+                            self.showAlert(withTitle: "Nachrichten zerstören aktiviert!", message: TimeHelper.configureTimerMessage(seconds: seconds))
                         }
                     }
                 } else {
@@ -179,73 +179,12 @@
                             print("Timer wurde aktiviert!")
                             self.messagesDestroyingTimerInSeconds = seconds
                             self.destroyingMessagesTimer.tintColor = .systemGreen
-                            self.showAlert(withTitle: "Nachrichten zerstören aktiviert!", message: self.configureTimerMessage(seconds: seconds))
+                            self.showAlert(withTitle: "Nachrichten zerstören aktiviert!", message: TimeHelper.configureTimerMessage(seconds: seconds))
                         }
                     }
                 }
             }
         }
-        
-        
-        private func configureTimerMessage(seconds: Int) -> String {
-            var hours = 0
-            var minutes = 0
-            var seconds1 = 0
-            
-            minutes = seconds / 60       // Ganzzahldivision
-            seconds1 = seconds % 60
-            
-            var andMinutes = 0
-            var andSeconds = 0
-            
-            hours = minutes / 60
-            print("Stunden: ")
-            andMinutes = minutes % 60
-            andSeconds = seconds1
-            
-            let hourOrHours = "\(hours == 1 ? "Stunde" : "Stunden")"
-            let minuteOrMinutes = "\(andMinutes == 1 ? "Minute" : "Minuten")"
-            let secondOrSeconds = "\(andSeconds == 1 ? "Sekunde" : "Sekunden")"
-            
-            let hoursText = "\(hours > 0 ? "\(hours) \(hourOrHours)," : "")"
-            let minuteText = "\(minutes > 0 ? "\(String(andMinutes)) \(minuteOrMinutes)" : "")"
-            let andSecondsText =  "\(minutes > 0 ? "und \(seconds1) \(secondOrSeconds)" : "\(seconds1) \(secondOrSeconds)")"
-            
-            
-            let components = [hoursText, minuteText, andSecondsText].filter { !$0.isEmpty }
-            let combinedText = components.joined(separator: " ")
-            
-            let hoursMinutesAndSecondsText = "Der Timer wurde auf \(combinedText) gesetzt!"
-            
-            return hoursMinutesAndSecondsText
-        }
-        
-        
-        
-        private func rechneSekunden(seconds: Int) -> String {
-            var stunden = 0
-            var minuten1 = 0
-            var sekunden1 = 0
-            
-            minuten1 = seconds / 60       // Ganzzahldivision
-            sekunden1 = seconds % 60
-            
-            var undMinuten = 0
-            var undSekunden = 0
-            
-            stunden = minuten1 / 60
-            print("Stunden: ")
-            undMinuten = minuten1 % 60
-            undSekunden = sekunden1
-            
-            let hoursText = "\(stunden > 0 ? " \(stunden) Stunden," : "")"
-            let minuteText = "\(minuten1 > 0 ? "\(String(undMinuten)) Minuten" : "")"
-            let AndSecondsText =  " \(minuten1 > 0 ? "und \(sekunden1) Sekunden" : "\(sekunden1) Sekunden")"
-            let stundenMinutenUndSekundenText = "Der Timer wurde auf \(hoursText) \(minuteText) \(AndSecondsText) gesetzt!"
-            
-            return stundenMinutenUndSekundenText
-        }
-        
         
         @objc func startCall() {
             print("Start Call clicked!")
