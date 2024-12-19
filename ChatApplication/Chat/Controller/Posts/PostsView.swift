@@ -63,25 +63,12 @@ extension PostsView {
                                     await viewModel.loadUserName(for: post.senderID, userNameFor: .posts)
                                 }
                         }
-                        Text(post.title)
-                            .font(.subheadline)
-                            .padding(.leading, 20)
-                            .padding(.top, 6)
+                        postTitleText(for: post)
                         Spacer()
                         
-                        Button {
-                            print("Share Post clicked!")
-                            withAnimation {
-                                viewModel.selectedPost = post
-                                viewModel.showShareListSheet.toggle()
-                            }
-                        } label: {
-                            Image(systemName: "paperplane")
-                                .font(.title)
-                        }
+                        shareButton(for: post)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    
                     
                     if let imageString  = post.imageString,
                        let imageData    = Data(base64Encoded: imageString),
@@ -93,46 +80,15 @@ extension PostsView {
                             .frame(width: 200, height: 200)
                     }
                     
-                    Text(post.message)
-                        .font(.subheadline)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.vertical, 12)
+                    postMessageText(for: post)
                     
                     HStack {
-                        Button(action: {
-                            withAnimation(.spring()) {
-                                viewModel.selectedPost = post
-                                viewModel.showCommentSheet.toggle()
-                                viewModel.listenForComments(for: post)
-                            }
-                        }, label: {
-                            HStack {
-                                Text("Kommentare anzeigen (\(post.comments.count))")
-                                    .font(.caption)
-                                    .fontWeight(.bold)
-                                Image(systemName: "bubble")
-                                    .font(.caption)
-                            }
-                            .padding(6)
-                            .background(Color.blue.opacity(0.1))
-                            .cornerRadius(8)
-                        })
-                        .buttonStyle(PlainButtonStyle())
+                        showCommentsButton(for: post)
                         
                         Spacer()
                         
                         VStack {
-                            Button {
-                                if !viewModel.postIDsLikedByCurrentUser.contains(post.id) {
-                                    viewModel.addLikeToPost(post: post, senderID: viewModel.currentUser.uid)
-                                } else {
-                                    viewModel.removeLikeFromPost(post: post, senderID: viewModel.currentUser.uid)
-                                }
-                            } label: {
-                                Image(systemName: viewModel.postIDsLikedByCurrentUser.contains(post.id) ? "heart.fill" : "heart")
-                                    .foregroundStyle(viewModel.postIDsLikedByCurrentUser.contains(post.id) ? .red : .black)
-                                    .font(.headline)
-                            }
+                            likePostButton(for: post)
                             .onAppear {
                                 viewModel.fetchIsPostLiked(postID: post.id, senderID: viewModel.currentUser.uid)
                             }
@@ -156,8 +112,72 @@ extension PostsView {
                         .presentationDragIndicator(.visible)
                 }
             })
-    }
+        }
   }
+    
+    private func postTitleText(for post: Post) -> some View {
+        Text(post.title)
+            .font(.subheadline)
+            .padding(.leading, 20)
+            .padding(.top, 6)
+    }
+    
+    private func postMessageText(for post: Post) -> some View {
+        Text(post.message)
+            .font(.subheadline)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.vertical, 12)
+    }
+    
+    private func showCommentsButton(for post: Post) -> some View {
+        Button(action: {
+            withAnimation(.spring()) {
+                viewModel.selectedPost = post
+                viewModel.showCommentSheet.toggle()
+                viewModel.listenForComments(for: post)
+            }
+        }, label: {
+            HStack {
+                Text("Kommentare anzeigen (\(post.comments.count))")
+                    .font(.caption)
+                    .fontWeight(.bold)
+                Image(systemName: "bubble")
+                    .font(.caption)
+            }
+            .padding(6)
+            .background(Color.blue.opacity(0.1))
+            .cornerRadius(8)
+        })
+        .buttonStyle(PlainButtonStyle())
+    }
+    
+    private func shareButton(for post: Post) -> some View {
+        Button {
+            print("Share Post clicked!")
+            withAnimation {
+                viewModel.selectedPost = post
+                viewModel.showShareListSheet.toggle()
+            }
+        } label: {
+            Image(systemName: "paperplane")
+                .font(.title3)
+        }
+    }
+    
+    private func likePostButton(for post: Post) -> some View {
+        Button {
+            if !viewModel.postIDsLikedByCurrentUser.contains(post.id) {
+                viewModel.addLikeToPost(post: post, senderID: viewModel.currentUser.uid)
+            } else {
+                viewModel.removeLikeFromPost(post: post, senderID: viewModel.currentUser.uid)
+            }
+        } label: {
+            Image(systemName: viewModel.postIDsLikedByCurrentUser.contains(post.id) ? "heart.fill" : "heart")
+                .foregroundStyle(viewModel.postIDsLikedByCurrentUser.contains(post.id) ? .red : .black)
+                .font(.headline)
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
     
     private func commentSection(for post: Post) -> some View {
         ScrollView {
@@ -338,6 +358,7 @@ extension PostsView {
                         .background(Color.white)
                         .cornerRadius(8)
                 }
+                .buttonStyle(PlainButtonStyle())
                 .disabled(viewModel.commentText.isEmpty)
         }
         .padding()
