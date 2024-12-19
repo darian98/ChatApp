@@ -11,14 +11,14 @@ import FirebaseAuth
 import UserNotifications
 import CryptoKit
 import Security
-
+import UIKit
 
 class ChatService {
     static let shared = ChatService()
     private let db = Firestore.firestore()
     
 
-    func sendEncryptedMessage(chatID: String, message: String, receiverIDs: [String] ,senderID: String, displayName: String, key: SymmetricKey) {
+    func sendEncryptedMessage(chatID: String, message: String, imageString: String?, receiverIDs: [String] ,senderID: String, displayName: String, key: SymmetricKey) {
         let randomID = UUID().uuidString
         
         guard let encryptedMessage = encryptMessage(message: message, key: key) else {
@@ -26,15 +26,23 @@ class ChatService {
                 return
             }
         
+        var encryptedImage: String?
+            if let imageString = imageString {
+                encryptedImage = encryptMessage(message: imageString, key: key)?.base64EncodedString()
+            }
+        
+        
         let data: [String: Any] = [
             "messageID": randomID,
             "message": encryptedMessage.base64EncodedString(),
+            "imageBase64": encryptedImage ?? "",
             "receiverIDs": receiverIDs,
             "senderID": senderID,
             "displayName": displayName,
             "receiverReadMessage": false,
             "timestamp": Timestamp(),
-            "isAudio": false
+            "isAudio": false,
+            "isImage": encryptedImage != nil
         ]
         db.collection("chats").document(chatID).collection("messages").document(randomID).setData(data){ error in
             if let error = error {
@@ -224,7 +232,8 @@ class ChatService {
                           let senderID = data["senderID"] as? String,
                           let receiverReadMessage = data["receiverReadMessage"] as? Bool,
                           let timestamp = data["timestamp"] as? Timestamp,
-                          let isAudio = data["isAudio"] as? Bool
+                          let isAudio = data["isAudio"] as? Bool,
+                          let isImage = data["isImage"] as? Bool
                     else {
                         return nil
                     }
@@ -233,7 +242,25 @@ class ChatService {
                     let receiverID = data["receiverID"] as? String
                     let receiverIDs = data["receiverIDs"] as? [String]
                     
-                    return ChatMessage(messageID: messageID, displayName: displayName, message: decryptedMessage, senderID: senderID, receiverID: receiverID, receiverIDs: receiverIDs, receiverReadMessage: receiverReadMessage, timestamp: timestamp.dateValue(), isAudio: isAudio)
+                    var image: UIImage? = nil
+                    
+                    if isImage {
+                        guard let encryptedImageString = data["imageBase64"] as? String,
+                              let encryptedImageData = Data(base64Encoded: encryptedImageString),
+                              let decryptedImageDataString   =  self.decryptMessage(encryptedData: encryptedImageData, key: key),
+                              let imageData                  = Data(base64Encoded: decryptedImageDataString),
+                              let uiImage     = UIImage(data: imageData)
+                            
+                        else { return nil }
+                              
+                        image = uiImage
+                        
+                            return ChatMessage(messageID: messageID, displayName: displayName, message: decryptedMessage, senderID: senderID, receiverID: receiverID, receiverIDs: receiverIDs, receiverReadMessage: receiverReadMessage, timestamp: timestamp.dateValue(), isAudio: isAudio, isImage: isImage, image: image)
+                    } else {
+                        return ChatMessage(messageID: messageID, displayName: displayName, message: decryptedMessage, senderID: senderID, receiverID: receiverID, receiverIDs: receiverIDs, receiverReadMessage: receiverReadMessage, timestamp: timestamp.dateValue(), isAudio: isAudio, isImage: isImage, image: nil)
+                    }
+                    
+                    
                 }
                 completion(messages)
                 

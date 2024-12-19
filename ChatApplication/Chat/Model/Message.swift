@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 struct ChatMessage {
     let messageID: String
@@ -17,4 +18,6 @@ struct ChatMessage {
     let receiverReadMessage: Bool
     let timestamp: Date
     let isAudio: Bool
+    let isImage: Bool
+    let image: UIImage?
 }

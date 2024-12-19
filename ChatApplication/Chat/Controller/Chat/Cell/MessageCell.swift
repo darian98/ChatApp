@@ -8,48 +8,69 @@
 import UIKit
 
 class MessageCell: UITableViewCell {
-    let messageLabel: UILabel = {
-        let label = UILabel()
-        label.numberOfLines = 0
-        label.translatesAutoresizingMaskIntoConstraints = false
-        return label
-    }()
-    
-    let statusImageView: UIImageView = {
-        let imageView = UIImageView()
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        imageView.contentMode = .scaleAspectFit
-        imageView.tintColor = .white // Passe die Farbe des Symbols an
-        return imageView
-    }()
-    
-    // Initialisierer
+    let messageLabel = UILabel()
+    let messageImageView = UIImageView()
+    private var imageHeightConstraint: NSLayoutConstraint?
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
+
+        // Konfiguriere das Label
+        messageLabel.numberOfLines = 0
         contentView.addSubview(messageLabel)
-        contentView.addSubview(statusImageView)
-        
-        // Constraints für Layout
+
+        // Konfiguriere das ImageView
+        messageImageView.contentMode = .scaleAspectFit
+        messageImageView.clipsToBounds = true
+        contentView.addSubview(messageImageView)
+
+        // AutoLayout konfigurieren
+        messageLabel.translatesAutoresizingMaskIntoConstraints = false
+        messageImageView.translatesAutoresizingMaskIntoConstraints = false
+
         NSLayoutConstraint.activate([
-            // Nachrichtentext-Label
-            messageLabel.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
-            messageLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10),
-            
-            // Wenn der Text rechts ausgerichtet ist
-            messageLabel.trailingAnchor.constraint(equalTo: statusImageView.leadingAnchor, constant: -5),
-            
-            // Status-Bild
-            statusImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
-            statusImageView.centerYAnchor.constraint(equalTo: messageLabel.centerYAnchor),
-            statusImageView.widthAnchor.constraint(equalToConstant: 20),
-            statusImageView.heightAnchor.constraint(equalToConstant: 20),
-            
-            // Maximale Breite des Labels
-            messageLabel.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 10)
+            messageImageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
+            messageImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 10),
+            messageImageView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
+
+            messageLabel.topAnchor.constraint(equalTo: messageImageView.bottomAnchor, constant: 10),
+            messageLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 10),
+            messageLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -10),
+            messageLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10)
         ])
+
+        // Höhenbeschränkung für das Bild
+        imageHeightConstraint = messageImageView.heightAnchor.constraint(equalToConstant: 200)
+        imageHeightConstraint?.isActive = true
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+
+    func configure(message: ChatMessage, isFromCurrentUser: Bool) {
+        // Text konfigurieren
+        if message.isAudio {
+            messageLabel.text = isFromCurrentUser
+                ? "Du: Sprachnotiz \(message.receiverReadMessage ? "✓✓" : "✓")"
+                : "\(message.displayName): Sprachnotiz"
+            messageImageView.image = nil
+        } else {
+            messageLabel.text = isFromCurrentUser
+                ? "Du: \(message.message) \(message.receiverReadMessage ? "✓✓" : "✓")"
+                : "\(message.displayName): \(message.message)"
+            
+            if let image = message.image {
+                messageImageView.image = image
+                imageHeightConstraint?.constant = 200 // Bild sichtbar
+            } else {
+                messageImageView.image = nil
+                imageHeightConstraint?.constant = 0 // Kein Platz für das Bild
+            }
+        }
+
+        // Textausrichtung und Hintergrundfarbe
+        messageLabel.textAlignment = isFromCurrentUser ? .right : .left
+        backgroundColor = isFromCurrentUser ? .systemBlue : .systemGray
     }
 }

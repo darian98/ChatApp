@@ -22,6 +22,7 @@
         var messageInputContainerBottomConstraint: NSLayoutConstraint!
         var destroyingMessagesTimer = UIBarButtonItem()
         var messagesDestroyingTimerInSeconds: Int?
+        private var selectedImageBase64String: String?
         
         var messages: [ChatMessage] = []
         let currentUser: UserModel
@@ -155,8 +156,8 @@
                     print("Returned already while guard self = self")
                     return
                 }
-                print("Selected Image: \(selectedImage.debugDescription)")
                 self.handleSelectedImage(image: selectedImage)
+                
             }
             let hostingController = UIHostingController(rootView: imagePickerWrapper)
             present(hostingController, animated: true)
@@ -164,12 +165,13 @@
         
         func handleSelectedImage(image: UIImage?) {
             guard let image = image else { return }
-            guard let compressedImageData = ImageHelper.compressImage(image, to: 900) else {
+            guard let compressedImageData = ImageHelper.compressImage(image, to: 700) else {
                 print("FAILED to CompressImageData")
                 return
             }
             let base64ImageString = compressedImageData.base64EncodedString()
-            print("Selected Image Base64: \(base64ImageString)")
+            print("Selected Image: \(base64ImageString.debugDescription)")
+            self.selectedImageBase64String = base64ImageString
         }
         
         
@@ -247,7 +249,8 @@
         private func setupTableView() {
             //view.addSubview(tableView)
             tableView.translatesAutoresizingMaskIntoConstraints = false
-            tableView.register(UITableViewCell.self, forCellReuseIdentifier: "messageCell")
+            //tableView.register(UITableViewCell.self, forCellReuseIdentifier: "messageCell")
+            tableView.register(MessageCell.self, forCellReuseIdentifier: "messageCell")
             tableView.dataSource = self
             tableView.delegate = self
         }
@@ -427,7 +430,7 @@
             guard let messageText = messageTextField.text, !messageText.isEmpty else { return }
             
             Task {
-                ChatService.shared.sendEncryptedMessage(chatID: chatID, message: messageText, receiverIDs: otherUserIDS, senderID: currentUser.uid, displayName: currentUser.displayName, key: chatKey)
+                ChatService.shared.sendEncryptedMessage(chatID: chatID, message: messageText, imageString: self.selectedImageBase64String, receiverIDs: otherUserIDS, senderID: currentUser.uid, displayName: currentUser.displayName, key: chatKey)
                 ChatService.shared.getChat(withID: chatID) { chat in
                     if let chat = chat {
                         print("chat in viewWillAppear vom ChatViewController2 geladen: \(chat.chatID)")
@@ -534,30 +537,12 @@
         }
         
         func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-            let cell = tableView.dequeueReusableCell(withIdentifier: "messageCell", for: indexPath)
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: "messageCell", for: indexPath) as? MessageCell else {
+                return UITableViewCell()
+            }
             cell.isUserInteractionEnabled = true
             let message = messages[indexPath.row]
-            let readIndicator = message.receiverReadMessage ? "✓✓" : "✓"
-            
-            if messageIsFromCurrentUser(message: message) {
-                if message.isAudio {
-                    cell.textLabel?.text = "Du: Sprachnotiz \(readIndicator)"
-                } else {
-                    cell.textLabel?.text = "Du: \(message.message) \(readIndicator)"
-                }
-                cell.textLabel?.textAlignment = .right
-                cell.backgroundColor = .systemBlue
-                cell.textLabel?.numberOfLines = 0
-            } else {
-                if message.isAudio {
-                    cell.textLabel?.text = "\(message.displayName): Sprachnotiz"
-                } else {
-                    cell.textLabel?.text = "\(message.displayName): \(message.message)"
-                }
-                cell.textLabel?.textAlignment = .left
-                cell.backgroundColor = .systemGray
-                cell.textLabel?.numberOfLines = 0
-            }
+            cell.configure(message: message, isFromCurrentUser: messageIsFromCurrentUser(message: message))
             return cell
         }
         
