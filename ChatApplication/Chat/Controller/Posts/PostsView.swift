@@ -8,8 +8,6 @@
 import Foundation
 import SwiftUI
 
-
-
 struct PostsView: View {
     @ObservedObject var viewModel: PostsViewModel
     @StateObject private var imageLoader = AsyncImageLoader()

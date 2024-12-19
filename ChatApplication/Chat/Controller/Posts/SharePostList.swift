@@ -9,14 +9,11 @@ import Foundation
 import SwiftUI
 
 struct SharePostList: View {
-    
     var currentUser: UserModel
     @ObservedObject var viewModel: PostsViewModel
     @StateObject private var imageLoader = AsyncImageLoader()
     
-    
     var body: some View {
-        
         VStack {
             List {
                 ForEach(currentUser.friends) { friend in
@@ -29,6 +26,7 @@ struct SharePostList: View {
                     }
                 }
             }
+            .listStyle(.insetGrouped)
             sharePostButton()
         }
         .onAppear {
@@ -94,14 +92,26 @@ extension SharePostList {
     
     private func sharePostButton() -> some View {
         Button {
-            print("")
+            print("Share Post Button clicked!")
         } label: {
             Text("Teilen")
+                .font(.headline)
+                .foregroundStyle(.white)
                 .background(.blue)
                 .frame(maxWidth: .infinity)
                 .padding()
+                .cornerRadius(8)
         }
-
     }
+    
+    func sharePost() {
+        var postedImage: UIImage?
+        if let imageString = viewModel.selectedPost?.imageString,
+           let imageData   = Data(base64Encoded: imageString),
+           let uiImage = UIImage(data: imageData) {
+            postedImage = uiImage
+        }
+    }
+    
     
 }

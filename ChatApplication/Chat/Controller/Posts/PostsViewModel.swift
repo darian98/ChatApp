@@ -256,9 +256,11 @@ class PostsViewModel: ObservableObject {
             friendRowIsChecked[friendID] = true
         } else {
             if let rowIsChecked = friendRowIsChecked[friendID] {
-                friendRowIsChecked[friendID] = false
-            } else {
-                friendRowIsChecked[friendID] = true
+                if rowIsChecked {
+                    friendRowIsChecked[friendID] = false
+                } else {
+                    friendRowIsChecked[friendID] = true
+                }
             }
         }
     }
