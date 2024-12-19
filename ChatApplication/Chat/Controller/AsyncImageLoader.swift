@@ -9,13 +9,14 @@ import Foundation
 import SwiftUI
 
 enum ImagesFor {
-    case commentingUser, postingUser
+    case commentingUser, postingUser, sharePostList
 }
 
 class AsyncImageLoader: ObservableObject {
     @Published var image: UIImage? = nil
     @Published var commenterImages: [String: UIImage] = [:]
     @Published var postingUserImages: [String: UIImage] = [:]
+    @Published var sharePostListImages: [String: UIImage] = [:]
     //@Published var imagesFor: ImagesFor? = nil
 
     /// Lädt das Profilbild basierend auf der Sender-ID
@@ -46,6 +47,8 @@ class AsyncImageLoader: ObservableObject {
                             self.commenterImages[senderID] = uiImage
                         } else if imagesFor == .postingUser {
                             self.postingUserImages[senderID] = uiImage
+                        } else if imagesFor == .sharePostList {
+                            self.sharePostListImages[senderID] = uiImage
                         }
                         continuation.resume()
                     }

@@ -9,7 +9,12 @@ import Foundation
 import SwiftUI
 import FirebaseFirestore
 
+enum UserNameFor {
+    case posts, friendList
+}
+
 class PostsViewModel: ObservableObject {
+    @Published var currentUser: UserModel
     @Published var posts: [Post] = []
     @Published var editMode: Bool = false
     @Published var commentMode: Bool = false
@@ -25,9 +30,14 @@ class PostsViewModel: ObservableObject {
     @Published var isProcessingLikeForPost: Bool = false
     @Published var isProcessingLikeForComment: Bool = false
     
+    @Published var showShareListSheet: Bool = false
+    @Published var friendsNames: [String: String] = [:]
+    @Published var friendRowIsChecked: [String: Bool] = [:]
+    
     private var commentListeners: [String: ListenerRegistration] = [:]
     
-    init() {
+    init(currentUser: UserModel) {
+        self.currentUser = currentUser
         listenForPosts()
     }
     // MARK: Function to add listener for new posts
@@ -209,14 +219,53 @@ class PostsViewModel: ObservableObject {
    
     // MARK: Loading user names for comment senders
     @MainActor
-    func loadUserName(for senderID: String) async {
-        guard userNames[senderID] == nil else { return } // Vermeide doppelte Anfragen
+    func loadUserName(for senderID: String, userNameFor: UserNameFor) async {
+        if userNameFor == .posts {
+            guard userNames[senderID] == nil else { return }
+        } else if userNameFor == .friendList {
+            guard friendsNames[senderID] == nil else { return}
+        }
+        // Vermeide doppelte Anfragen
         do {
             guard let user = try await UserService.shared.fetchUser(byID: senderID) else { return }
-            self.userNames[senderID] = user.displayName
+            if userNameFor == .posts {
+                self.userNames[senderID] = user.displayName
+            } else if userNameFor == .friendList {
+                self.friendsNames[senderID] = user.displayName
+            }
         } catch {
             print("Fehler beim Laden des Benutzernamens für \(senderID): \(error.localizedDescription)")
-            self.userNames[senderID] = "Fehler beim Laden"
+            if userNameFor == .posts {
+                self.userNames[senderID] = "Fehler beim Laden"
+            } else if userNameFor == .friendList {
+                self.friendsNames[senderID] = "Fehler beim Laden"
+            }
         }
     }
+    //MARK: NOT USED YET
+    func loadAllUserNames(friendIDs: [String]) async {
+            for friendID in friendIDs {
+                if self.friendsNames[friendID] == nil {
+                    await loadUserName(for: friendID, userNameFor: .friendList)
+                }
+            }
+        }
+    
+    func updateFriendRowClicked(friendID: String) {
+        if friendRowIsChecked[friendID] == nil {
+            friendRowIsChecked[friendID] = true
+        } else {
+            if let rowIsChecked = friendRowIsChecked[friendID] {
+                friendRowIsChecked[friendID] = false
+            } else {
+                friendRowIsChecked[friendID] = true
+            }
+        }
+    }
+    
+    func isFriendRowClicked(friendID: String) -> Bool {
+        return friendRowIsChecked[friendID] ?? false
+    }
+    
+    
 }

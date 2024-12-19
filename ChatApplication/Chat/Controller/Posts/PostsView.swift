@@ -8,9 +8,10 @@
 import Foundation
 import SwiftUI
 
+
+
 struct PostsView: View {
     @ObservedObject var viewModel: PostsViewModel
-    var currentUser: UserModel
     @StateObject private var imageLoader = AsyncImageLoader()
     
     var body: some View {
@@ -27,8 +28,17 @@ struct PostsView: View {
             }
         }
         .sheet(isPresented: $viewModel.editMode, content: {
-            CreatePostView(currentUser: currentUser)
+            CreatePostView(currentUser: viewModel.currentUser)
         })
+        .sheet(isPresented: $viewModel.showShareListSheet, content: {
+            SharePostList(currentUser: viewModel.currentUser, viewModel: viewModel)
+        })
+        .onAppear {
+            FriendService.shared.fetchFriends(for: viewModel.currentUser.uid) { friends in
+                viewModel.currentUser.friends = friends
+            }
+        }
+        
         .navigationTitle(viewModel.posts.isEmpty ? "Keine Posts vorhanden": "Posts")
     }
 }
@@ -50,13 +60,25 @@ extension PostsView {
                                 .font(.caption2)
                                 .foregroundStyle(.gray)
                                 .task {
-                                    await viewModel.loadUserName(for: post.senderID)
+                                    await viewModel.loadUserName(for: post.senderID, userNameFor: .posts)
                                 }
                         }
                         Text(post.title)
                             .font(.subheadline)
                             .padding(.leading, 20)
                             .padding(.top, 6)
+                        Spacer()
+                        
+                        Button {
+                            print("Share Post clicked!")
+                            withAnimation {
+                                viewModel.selectedPost = post
+                                viewModel.showShareListSheet.toggle()
+                            }
+                        } label: {
+                            Image(systemName: "paperplane")
+                                .font(.title)
+                        }
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
                     
@@ -102,9 +124,9 @@ extension PostsView {
                         VStack {
                             Button {
                                 if !viewModel.postIDsLikedByCurrentUser.contains(post.id) {
-                                    viewModel.addLikeToPost(post: post, senderID: currentUser.uid)
+                                    viewModel.addLikeToPost(post: post, senderID: viewModel.currentUser.uid)
                                 } else {
-                                    viewModel.removeLikeFromPost(post: post, senderID: currentUser.uid)
+                                    viewModel.removeLikeFromPost(post: post, senderID: viewModel.currentUser.uid)
                                 }
                             } label: {
                                 Image(systemName: viewModel.postIDsLikedByCurrentUser.contains(post.id) ? "heart.fill" : "heart")
@@ -112,7 +134,7 @@ extension PostsView {
                                     .font(.headline)
                             }
                             .onAppear {
-                                viewModel.fetchIsPostLiked(postID: post.id, senderID: currentUser.uid)
+                                viewModel.fetchIsPostLiked(postID: post.id, senderID: viewModel.currentUser.uid)
                             }
                             
                             Text("\(String(post.likes.likesCount))")
@@ -234,7 +256,7 @@ extension PostsView {
             } else {
                 Text("Lade Benutzername...")
                     .task {
-                        await viewModel.loadUserName(for: comment.senderID)
+                        await viewModel.loadUserName(for: comment.senderID, userNameFor: .posts)
                     }
             }
         }
@@ -275,14 +297,14 @@ extension PostsView {
     
     private func commentlikeButton(postID: String, commentID: String, commentsLikes: Likes) -> some View {
         Button {
-            if ifCommentWasLikedByUser(commentsLikes: commentsLikes, userID: currentUser.uid) {
-                viewModel.addLikeToComment(postID: postID, commentID: commentID, senderID: currentUser.uid)
+            if ifCommentWasLikedByUser(commentsLikes: commentsLikes, userID: viewModel.currentUser.uid) {
+                viewModel.addLikeToComment(postID: postID, commentID: commentID, senderID: viewModel.currentUser.uid)
             } else {
-                viewModel.removeLikeFromComment(postID: postID, commentID: commentID, senderID: currentUser.uid)
+                viewModel.removeLikeFromComment(postID: postID, commentID: commentID, senderID: viewModel.currentUser.uid)
             }
         } label: {
-            Image(systemName: ifCommentWasLikedByUser(commentsLikes: commentsLikes, userID: currentUser.uid) ? "heart.fill": "heart")
-                .foregroundStyle(ifCommentWasLikedByUser(commentsLikes: commentsLikes, userID: currentUser.uid) ? .red : .white)
+            Image(systemName: ifCommentWasLikedByUser(commentsLikes: commentsLikes, userID: viewModel.currentUser.uid) ? "heart.fill": "heart")
+                .foregroundStyle(ifCommentWasLikedByUser(commentsLikes: commentsLikes, userID: viewModel.currentUser.uid) ? .red : .white)
                 .font(.caption)
         }
     }
@@ -302,7 +324,7 @@ extension PostsView {
             Button {
                 Task {
                     do {
-                        try await PostService.shared.addCommentToPost(postID: post.id, senderID: currentUser.uid, comment: viewModel.commentText)
+                        try await PostService.shared.addCommentToPost(postID: post.id, senderID: viewModel.currentUser.uid, comment: viewModel.commentText)
                         viewModel.commentText = ""
                         print("PostID: \(post.id)")
                     } catch {

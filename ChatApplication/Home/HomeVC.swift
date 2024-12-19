@@ -19,7 +19,7 @@ class HomeVC: UITabBarController {
     init(currentUser: UserModel) {
         self.currentUser = currentUser
         self.profileViewModel = ProfileViewModel(currentUser: currentUser)
-        self.postsViewModel = PostsViewModel()
+        self.postsViewModel = PostsViewModel(currentUser: currentUser)
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -38,7 +38,7 @@ class HomeVC: UITabBarController {
     
     func configureTabBarViewControllers() {
         
-        let postsView = PostsView(viewModel: postsViewModel, currentUser: currentUser)
+        let postsView = PostsView(viewModel: postsViewModel)
         let postsViewHostingController = UIHostingController(rootView: postsView)
         let navPostsViewHostingController = UINavigationController(rootViewController: postsViewHostingController)
         navPostsViewHostingController.tabBarItem = UITabBarItem(title: "Posts", image: UIImage(systemName: "house"), tag: 0)
